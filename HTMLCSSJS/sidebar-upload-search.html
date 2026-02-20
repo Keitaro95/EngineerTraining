@@ -1,0 +1,1375 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>航空機機体整備作業指示書検索システム</title>
+
+<!-- ============================================================
+  CSS セクション
+  Streamlit の UI 要素を vanilla CSS で再現している。
+  学習ポイント:
+    - CSS変数 (カスタムプロパティ) で色・サイズを一元管理
+    - Grid / Flexbox でレイアウト構築
+    - transition でインタラクション演出
+    - @media でレスポンシブ対応
+============================================================ -->
+<style>
+/* ── CSS変数 ─────────────────────────────────────
+   :root に定義すると、どこからでも var(--名前) で参照できる。
+   色の変更はここだけで済むので保守性が高い。           */
+:root {
+  --bg-primary: #0e1117;
+  --bg-secondary: #1a1d24;
+  --bg-sidebar: #14171f;
+  --bg-card: #1e2230;
+  --bg-input: #262b3d;
+  --text-primary: #e6e8ef;
+  --text-secondary: #9ca3b4;
+  --text-muted: #6b7280;
+  --accent-blue: #4a90d9;
+  --accent-green: #2ecc71;
+  --accent-red: #d32f2f;
+  --accent-orange: #e67e22;
+  --accent-yellow: #f1c40f;
+  --border-color: #2d3348;
+  --border-radius: 8px;
+  --sidebar-width: 320px;
+  --font-body: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  --font-mono: 'Cascadia Code', 'Source Code Pro', monospace;
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+/* ── リセット & ベース ──────────────────────────────
+   ブラウザのデフォルトスタイルを統一する。
+   box-sizing: border-box は padding を width に含める。 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── レイアウト構造 ─────────────────────────────────
+   Streamlit は左にサイドバー、右にメインコンテンツ。
+   CSS Grid で 2 カラムレイアウトを実現する。         */
+.app-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 100vh;
+}
+
+/* ── サイドバー ─────────────────────────────────────
+   Streamlit の st.sidebar に相当。
+   position: sticky で画面固定。overflow-y: auto でスクロール。 */
+.sidebar {
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  padding: 1.5rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-header {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ── メインコンテンツ ──────────────────────────────── */
+.main-content {
+  padding: 2rem 3rem;
+  max-width: 1200px;
+}
+
+/* ── 共通コンポーネント ──────────────────────────────
+   Streamlit の各 UI ウィジェットに対応するスタイル。    */
+
+/* ヘッダー (st.markdown("## ...")) */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 区切り線 (st.divider()) */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1.25rem 0;
+}
+
+/* ファイルアップローダー (st.file_uploader) */
+.file-upload-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-normal), background var(--transition-normal);
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+.file-upload-zone:hover {
+  border-color: var(--accent-blue);
+  background: rgba(74, 144, 217, 0.05);
+}
+.file-upload-zone.has-file {
+  border-color: var(--accent-green);
+  border-style: solid;
+  background: rgba(46, 204, 113, 0.05);
+}
+.file-upload-zone input[type="file"] {
+  /* input を透明にして zone 全体をクリック可能にする */
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-upload-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.file-upload-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+.file-name-display {
+  font-size: 0.8rem;
+  color: var(--accent-green);
+  margin-top: 0.5rem;
+  word-break: break-all;
+}
+.file-help {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* バリデーションエラー (st.sidebar.error) */
+.validation-error {
+  background: rgba(211, 47, 47, 0.1);
+  border-left: 3px solid var(--accent-red);
+  color: #ef9a9a;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* ボタン (st.button) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+  font-family: var(--font-body);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* type="primary" */
+.btn-primary {
+  background: var(--accent-blue);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #5a9ee0;
+  transform: translateY(-1px);
+}
+/* type="secondary" */
+.btn-secondary {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-card);
+}
+/* アクティブ状態のジョブボタン */
+.btn-job.active {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--accent-blue);
+}
+
+/* セレクトボックス (st.selectbox) */
+.select-wrapper {
+  position: relative;
+}
+.select-wrapper select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  appearance: none;
+  cursor: pointer;
+}
+.select-wrapper::after {
+  content: '▾';
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+/* メッセージ系 (st.success, st.error, st.info, st.warning) */
+.msg {
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+}
+.msg-success {
+  background: rgba(46, 204, 113, 0.1);
+  border-left: 4px solid var(--accent-green);
+  color: #a3e4b8;
+}
+.msg-error {
+  background: rgba(211, 47, 47, 0.1);
+  border-left: 4px solid var(--accent-red);
+  color: #ef9a9a;
+}
+.msg-info {
+  background: rgba(74, 144, 217, 0.1);
+  border-left: 4px solid var(--accent-blue);
+  color: #90caf9;
+}
+.msg-warning {
+  background: rgba(230, 126, 34, 0.1);
+  border-left: 4px solid var(--accent-orange);
+  color: #ffcc80;
+}
+
+/* スピナー (st.spinner) */
+.spinner-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+.spinner-overlay.active {
+  display: flex;
+}
+/* @keyframes で回転アニメーションを定義 */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner-ring {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.spinner-text {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+/* ── TO情報セクション ────────────────────────────────
+   st.markdown(to_info_html, unsafe_allow_html=True) に対応。
+   CSS Grid で 2×2 のカード配置。                     */
+.to-info-section {
+  margin-bottom: 1.5rem;
+}
+.to-info-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.to-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.to-info-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+.box-header {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.box-content {
+  background: var(--bg-input);
+  padding: 0.75rem;
+  border-radius: 4px;
+  min-height: 60px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ── 結果セクション ────────────────────────────────── */
+.results-header {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.results-header code {
+  background: var(--bg-input);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* ジョブ名ボタン群 (st.columns + st.button) */
+.job-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.job-buttons .btn {
+  width: auto;
+  min-width: 140px;
+  flex: 1;
+  max-width: 220px;
+}
+
+/* タブ (st.tabs) */
+.tabs-container {
+  margin-bottom: 1.5rem;
+}
+.tab-headers {
+  display: flex;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+.tab-header {
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: var(--font-body);
+}
+.tab-header:hover {
+  color: var(--text-primary);
+}
+.tab-header.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+}
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+.tab-panel.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* メトリクス (st.metric) */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  text-align: center;
+}
+.metric-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+/* 候補カード内のフィールド */
+.candidate-detail {
+  margin-bottom: 0.75rem;
+}
+.candidate-detail strong {
+  color: var(--text-primary);
+}
+.candidate-detail .value {
+  color: var(--text-secondary);
+}
+
+/* 改訂文書案 (赤文字) */
+.revision-draft-text {
+  color: var(--accent-red) !important;
+  font-weight: 500;
+}
+
+/* プレーンテキスト表示 (st.text) */
+.plain-text {
+  background: var(--bg-input);
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0.75rem;
+}
+
+/* 注意事項リスト */
+.notes-list {
+  list-style: none;
+  padding: 0;
+}
+.notes-list li::before {
+  content: '•';
+  color: var(--accent-blue);
+  margin-right: 0.5rem;
+}
+
+/* Expander (st.expander) */
+.expander {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  margin-bottom: 0.5rem;
+}
+.expander-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border-radius: var(--border-radius);
+  user-select: none;
+}
+.expander-header:hover {
+  background: var(--bg-input);
+}
+.expander-arrow {
+  transition: transform var(--transition-fast);
+  font-size: 0.7rem;
+}
+.expander.open .expander-arrow {
+  transform: rotate(90deg);
+}
+.expander-body {
+  display: none;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  border-top: 1px solid var(--border-color);
+}
+.expander.open .expander-body {
+  display: block;
+}
+
+/* caption (st.caption) */
+.caption {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* セクションタイトル */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+/* ── レスポンシブ ──────────────────────────────────
+   画面幅 768px 以下でサイドバーを上に畳む。         */
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: relative;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .main-content {
+    padding: 1.5rem;
+  }
+  .to-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .metrics-row {
+    grid-template-columns: 1fr;
+  }
+  .job-buttons .btn {
+    max-width: none;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+  HTML 構造セクション
+  Streamlit の各ウィジェットを意味的な HTML 要素で再現。
+  学習ポイント:
+    - セマンティック HTML (aside, main, section, article)
+    - data-* 属性でJSから参照するデータを持たせる
+    - id / class の命名規則
+============================================================ -->
+
+<!-- スピナー（全画面オーバーレイ）: st.spinner() に対応 -->
+<div class="spinner-overlay" id="spinner">
+  <div class="spinner-ring"></div>
+  <div class="spinner-text" id="spinnerText">処理中...</div>
+</div>
+
+<div class="app-layout">
+
+  <!-- ======== サイドバー ======== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">📁 ファイルアップロード</div>
+
+    <!-- ファイルアップローダー boxA: st.sidebar.file_uploader -->
+    <div>
+      <label class="file-upload-label">比較ファイル（YSS 比較~.xlsx）を選択してください</label>
+      <div class="file-upload-zone" id="diffZone">
+        <div class="file-upload-icon">📄</div>
+        <div>ドラッグ＆ドロップ または クリック</div>
+        <div class="file-help">.xlsx, .xls ファイル対応</div>
+        <div class="file-name-display" id="diffFileName"></div>
+        <!-- 
+          input[type="file"] の accept 属性で受け付けるファイル形式を指定。
+          change イベントで JS 側にファイル情報を渡す。
+        -->
+        <input type="file" id="diffFile" accept=".xlsx,.xls">
+      </div>
+      <div id="diffErrors"></div>
+    </div>
+
+    <!-- ファイルアップローダー boxB -->
+    <div>
+      <label class="file-upload-label">Oファイル（YSS O~.xlsx）を選択してください</label>
+      <div class="file-upload-zone" id="toserZone">
+        <div class="file-upload-icon">📄</div>
+        <div>ドラッグ＆ドロップ または クリック</div>
+        <div class="file-help">.xlsx, .xls ファイル対応</div>
+        <div class="file-name-display" id="toserFileName"></div>
+        <input type="file" id="toserFile" accept=".xlsx,.xls">
+      </div>
+      <div id="toserErrors"></div>
+    </div>
+
+    <!-- 検索実行ボタン: st.sidebar.button("🚀 検索実行", type="primary") -->
+    <button class="btn btn-primary" id="searchBtn" disabled>
+      🚀 検索実行
+    </button>
+    <div id="searchStatus"></div>
+
+    <hr class="divider">
+
+    <!-- 表示設定: st.sidebar.selectbox -->
+    <div id="yssSelectSection" style="display:none;">
+      <div class="sidebar-header">🔧 表示設定</div>
+      <label class="file-upload-label">表示する YSS ID を選択</label>
+      <div class="select-wrapper">
+        <select id="yssSelect"></select>
+      </div>
+      <hr class="divider">
+    </div>
+
+    <!-- テスト用ボタン: st.sidebar.button("📊 スタブデータ取得") -->
+    <div>
+      <div class="sidebar-header">🧪 テスト用</div>
+      <button class="btn btn-secondary" id="stubBtn">
+        📊 スタブデータ取得
+      </button>
+    </div>
+
+    <hr class="divider">
+
+    <!-- デバッグ情報: st.sidebar.expander -->
+    <div id="debugSection" style="display:none;">
+      <div class="sidebar-header">🔍 デバッグ情報</div>
+      <div class="expander" id="expanderRaw">
+        <div class="expander-header" onclick="toggleExpander('expanderRaw')">
+          📄 APIレスポンスJSON（全体）<span class="expander-arrow">▶</span>
+        </div>
+        <div class="expander-body">
+          <pre id="debugRawJson" style="overflow:auto;max-height:300px;font-size:0.75rem;color:var(--text-secondary);"></pre>
+        </div>
+      </div>
+      <div class="expander open" id="expanderExtracted">
+        <div class="expander-header" onclick="toggleExpander('expanderExtracted')">
+          📊 抽出結果（詳細）<span class="expander-arrow">▶</span>
+        </div>
+        <div class="expander-body">
+          <div id="debugExtracted"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======== メインコンテンツ ======== -->
+  <main class="main-content">
+    <!-- ページタイトル: st.markdown("## 🔍 ...") -->
+    <h1 class="page-title">🔍 航空機機体整備作業指示書検索システム</h1>
+    <p class="page-subtitle">YSS差分ファイルをアップロードして、関連する作業手順書を検索します。</p>
+
+    <!-- TO情報セクション -->
+    <div id="toInfoSection" style="display:none;"></div>
+
+    <!-- 結果エリア -->
+    <div id="resultsArea">
+      <!-- 初期状態: st.info("👈 ...") -->
+      <div class="msg msg-info">
+        👈 サイドバーから2つのファイルをアップロードして、「検索実行」ボタンを押してください。
+      </div>
+
+      <!-- 使い方: st.expander("📖 使い方") -->
+      <div class="expander" id="expanderUsage">
+        <div class="expander-header" onclick="toggleExpander('expanderUsage')">
+          📖 使い方 <span class="expander-arrow">▶</span>
+        </div>
+        <div class="expander-body">
+          <ol style="padding-left:1.25rem; color:var(--text-secondary); line-height:2;">
+            <li><strong>ファイルをアップロード</strong>:
+              boxA: ファイル名に「比較」を含む .xlsx ファイル /
+              boxB: ファイル名に「O」を含む .xlsx ファイル</li>
+            <li><strong>検索実行</strong>: 両方のファイルが揃い、バリデーション通過後に「🚀 検索実行」ボタンをクリック</li>
+            <li><strong>結果を確認</strong>:
+              複数の結果セットがある場合はサイドバーで選択 /
+              ジョブ名でフィルタリング可能 /
+              スコア順にタブで表示されます</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================
+  JavaScript セクション
+  Streamlit の session_state + ロジック + UI更新を vanilla JS で再現。
+  学習ポイント:
+    - DOM 操作 (getElementById, innerHTML, addEventListener)
+    - イベント駆動プログラミング (change, click)
+    - 状態管理 (オブジェクトで session_state を模倣)
+    - テンプレートリテラルで動的 HTML 生成
+    - JSON のパースと整形
+============================================================ -->
+<script>
+// ── 状態管理 ─────────────────────────────────────
+// Streamlit の st.session_state に対応する。
+// アプリ全体の状態をこの1つのオブジェクトで管理する。
+const state = {
+  diffFile: null,        // boxA ファイル
+  toserFile: null,       // boxB ファイル
+  validDiff: false,      // boxA バリデーション結果
+  validToser: false,     // boxB バリデーション結果
+  apiResult: null,       // API レスポンス全体
+  allCandidates: null,   // 抽出された候補 (Results型)
+  uiData: null,          // UI 用に変換されたデータ (StreamlitUISchema型)
+  selectedYssId: null,   // 選択中の YSS_ID
+  selectedJobName: null, // 選択中のジョブ名
+  toNumber: '未検出',
+  tripleSn: '未検出',
+};
+
+// ── DOM 要素の参照 ────────────────────────────────
+// 頻繁に使う要素は変数にキャッシュしておくと効率的。
+const $diffFile     = document.getElementById('diffFile');
+const $toserFile    = document.getElementById('toserFile');
+const $diffZone     = document.getElementById('diffZone');
+const $toserZone    = document.getElementById('toserZone');
+const $diffFileName = document.getElementById('diffFileName');
+const $toserFileName= document.getElementById('toserFileName');
+const $diffErrors   = document.getElementById('diffErrors');
+const $toserErrors  = document.getElementById('toserErrors');
+const $searchBtn    = document.getElementById('searchBtn');
+const $searchStatus = document.getElementById('searchStatus');
+const $yssSelect    = document.getElementById('yssSelect');
+const $yssSelectSec = document.getElementById('yssSelectSection');
+const $resultsArea  = document.getElementById('resultsArea');
+const $toInfoSection= document.getElementById('toInfoSection');
+const $debugSection = document.getElementById('debugSection');
+const $spinner      = document.getElementById('spinner');
+const $spinnerText  = document.getElementById('spinnerText');
+
+// ── ファイルバリデーション ──────────────────────────
+// Streamlit 側のファイル名チェックロジックをそのまま再現。
+function validateDiffFile(file) {
+  const errors = [];
+  if (!file.name.includes('YSS')) {
+    errors.push('⚠️ boxA: ファイル名に「YSS」が含まれていません');
+  }
+  if (!file.name.includes('比較')) {
+    errors.push('⚠️ boxA: ファイル名に「比較」が含まれていません');
+  }
+  return errors;
+}
+
+function validateToserFile(file) {
+  const errors = [];
+  if (!file.name.includes('YSS')) {
+    errors.push('⚠️ boxB: ファイル名に「YSS」が含まれていません');
+  }
+  if (!file.name.includes('O')) {
+    errors.push('⚠️ boxB: ファイル名に「O」が含まれていません');
+  }
+  return errors;
+}
+
+// エラーメッセージを表示する汎用関数
+function showErrors(container, errors) {
+  container.innerHTML = errors
+    .map(e => `<div class="validation-error">${e}</div>`)
+    .join('');
+}
+
+// 検索ボタンの有効/無効を更新
+function updateSearchButton() {
+  const canSearch = state.diffFile && state.toserFile && state.validDiff && state.validToser;
+  $searchBtn.disabled = !canSearch;
+}
+
+// ── ファイル選択イベント ────────────────────────────
+// input[type="file"] の change イベントを監視する。
+// Streamlit では st.file_uploader の戻り値が自動で更新される部分。
+$diffFile.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  state.diffFile = file;
+  $diffFileName.textContent = `📎 ${file.name}`;
+  $diffZone.classList.add('has-file');
+
+  const errors = validateDiffFile(file);
+  state.validDiff = errors.length === 0;
+  showErrors($diffErrors, errors);
+  updateSearchButton();
+});
+
+$toserFile.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  state.toserFile = file;
+  $toserFileName.textContent = `📎 ${file.name}`;
+  $toserZone.classList.add('has-file');
+
+  const errors = validateToserFile(file);
+  state.validToser = errors.length === 0;
+  showErrors($toserErrors, errors);
+  updateSearchButton();
+});
+
+// ── Expander の開閉 ─────────────────────────────
+// st.expander に対応。class の toggle で表示/非表示を切り替え。
+function toggleExpander(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── スピナー制御 ─────────────────────────────────
+function showSpinner(text) {
+  $spinnerText.textContent = text;
+  $spinner.classList.add('active');
+}
+function hideSpinner() {
+  $spinner.classList.remove('active');
+}
+
+// ── API レスポンスからの候補抽出 ──────────────────
+// Python の extract_all_candidates() を JS に移植。
+function extractAllCandidates(apiResponse) {
+  const results = {};
+  if (!apiResponse.data) return results;
+  if (apiResponse.data.status !== 'succeeded') return results;
+
+  const outputs = apiResponse.data.outputs || {};
+  const textList = outputs.text || [];
+
+  if (!Array.isArray(textList)) return results;
+
+  // textList の各要素は {"YSS_ID:1": [...], ...} のようなオブジェクト
+  for (const item of textList) {
+    if (typeof item === 'object' && item !== null) {
+      for (const [key, value] of Object.entries(item)) {
+        if (key.startsWith('YSS_ID')) {
+          if (Array.isArray(value)) {
+            results[key] = value;
+          } else if (typeof value === 'string') {
+            const candidates = parseTextOutput(value);
+            if (candidates.length > 0) {
+              results[key] = candidates;
+            }
+          }
+        }
+      }
+    }
+  }
+  return results;
+}
+
+// Python の parse_text_output() を JS に移植
+function parseTextOutput(textContent) {
+  let jsonString = textContent.trim();
+
+  // ```json ... ``` を除去
+  if (jsonString.startsWith('```') && jsonString.endsWith('```')) {
+    const lines = jsonString.split('\n');
+    jsonString = lines.slice(1, -1).join('\n');
+  }
+  if (jsonString.toLowerCase().startsWith('json')) {
+    jsonString = jsonString.slice(4).trimStart();
+  }
+
+  try {
+    const parsed = JSON.parse(jsonString);
+    if (Array.isArray(parsed)) return parsed;
+    if (typeof parsed === 'object') return [parsed];
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+// ── UI スキーマへの変換 ────────────────────────────
+// Python の transform_to_ui_schema() を JS に移植。
+function transformToUiSchema(results) {
+  const yssGroups = [];
+
+  for (const [yssId, candidates] of Object.entries(results)) {
+    // job_name でグループ化
+    const jobDict = {};
+    for (const c of candidates) {
+      const jobName = c.job_name || 'Unknown';
+      if (!jobDict[jobName]) jobDict[jobName] = [];
+      jobDict[jobName].push(c);
+    }
+
+    // job_name をソートし、各グループ内を rank でソート
+    const jobGroups = Object.keys(jobDict).sort().map(jobName => {
+      const sorted = jobDict[jobName].sort((a, b) => {
+        const ra = parseInt(a.rank) || 999;
+        const rb = parseInt(b.rank) || 999;
+        return ra - rb;
+      });
+      return { job_name: jobName, candidates: sorted };
+    });
+
+    yssGroups.push({
+      yss_id: yssId,
+      yss_id_display: yssId.replace('YSS_ID:', 'YSS ID '),
+      job_groups: jobGroups,
+    });
+  }
+  return { yss_groups: yssGroups };
+}
+
+// ── YSS ID セレクタの更新 ──────────────────────────
+// st.sidebar.selectbox に対応。
+// option 要素を動的に生成する。
+function updateYssSelector() {
+  const groups = state.uiData?.yss_groups || [];
+  if (groups.length === 0) {
+    $yssSelectSec.style.display = 'none';
+    return;
+  }
+
+  $yssSelectSec.style.display = 'block';
+  $yssSelect.innerHTML = groups
+    .map(g => `<option value="${g.yss_id}">${g.yss_id_display}</option>`)
+    .join('');
+
+  // デフォルト選択
+  if (!state.selectedYssId || !groups.find(g => g.yss_id === state.selectedYssId)) {
+    state.selectedYssId = groups[0].yss_id;
+  }
+  $yssSelect.value = state.selectedYssId;
+}
+
+$yssSelect.addEventListener('change', () => {
+  state.selectedYssId = $yssSelect.value;
+  state.selectedJobName = null; // ジョブ選択をリセット
+  renderResults();
+});
+
+// ── ジョブ名ボタンクリック ────────────────────────
+function selectJob(jobName) {
+  state.selectedJobName = jobName;
+  renderResults();
+}
+
+// ── タブ切り替え ──────────────────────────────────
+// st.tabs に対応。
+// data-tab 属性でタブとパネルを紐づける。
+function switchTab(tabGroupId, tabIndex) {
+  const group = document.getElementById(tabGroupId);
+  if (!group) return;
+
+  // 全ヘッダー/パネルから active を外す
+  group.querySelectorAll('.tab-header').forEach(h => h.classList.remove('active'));
+  group.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  // 指定インデックスに active を付ける
+  const headers = group.querySelectorAll('.tab-header');
+  const panels  = group.querySelectorAll('.tab-panel');
+  if (headers[tabIndex]) headers[tabIndex].classList.add('active');
+  if (panels[tabIndex])  panels[tabIndex].classList.add('active');
+}
+
+// ── 検索結果の描画 ────────────────────────────────
+// Streamlit のメインコンテンツ描画ロジック全体に対応。
+// innerHTML にテンプレートリテラルで HTML を組み立てて流し込む。
+function renderResults() {
+  if (!state.uiData || !state.uiData.yss_groups.length) {
+    $resultsArea.innerHTML = `<div class="msg msg-info">検索結果がありません。</div>`;
+    $toInfoSection.style.display = 'none';
+    return;
+  }
+
+  const groups = state.uiData.yss_groups;
+  const selectedGroup = groups.find(g => g.yss_id === state.selectedYssId);
+  if (!selectedGroup) {
+    $resultsArea.innerHTML = `<div class="msg msg-warning">YSS_ID のデータが取得できませんでした。</div>`;
+    return;
+  }
+
+  // TO 情報セクション
+  renderToInfo();
+
+  const jobGroups = selectedGroup.job_groups || [];
+  if (jobGroups.length === 0) {
+    $resultsArea.innerHTML = `
+      <hr class="divider">
+      <div class="results-header">📊 検索結果: <code>${state.uploadedFilename || ''}</code></div>
+      <div class="msg msg-info">対象となるジョブ名ファイル(.xlsx)がありません。</div>
+    `;
+    return;
+  }
+
+  // ジョブ名のデフォルト選択
+  if (!state.selectedJobName || !jobGroups.find(jg => jg.job_name === state.selectedJobName)) {
+    state.selectedJobName = jobGroups[0].job_name;
+  }
+
+  const selectedJob = jobGroups.find(jg => jg.job_name === state.selectedJobName);
+  const candidates = selectedJob ? selectedJob.candidates : [];
+  const numToShow = Math.min(candidates.length, 3);
+
+  // ジョブボタン HTML
+  const jobButtonsHtml = jobGroups.map((jg, i) => {
+    const isActive = jg.job_name === state.selectedJobName;
+    const label = (jg.job_name && jg.job_name.trim())
+      ? jg.job_name.trim()
+      : '(対象となるジョブ名.xlsxファイルなし)';
+    return `<button class="btn btn-secondary btn-job ${isActive ? 'active' : ''}"
+                    onclick="selectJob('${escapeHtml(jg.job_name)}')">${escapeHtml(label)}</button>`;
+  }).join('');
+
+  // タブヘッダー + パネル HTML
+  let tabsHtml = '';
+  if (candidates.length > 0) {
+    const tabHeaders = candidates.slice(0, numToShow).map((c, i) => {
+      const rank = c.rank != null ? parseInt(c.rank) || '?' : '?';
+      return `<button class="tab-header ${i === 0 ? 'active' : ''}"
+                      onclick="switchTab('rankTabs', ${i})">スコア${rank}位</button>`;
+    }).join('');
+
+    const tabPanels = candidates.slice(0, numToShow).map((c, i) => {
+      return `<div class="tab-panel ${i === 0 ? 'active' : ''}">
+        ${renderCandidate(c)}
+      </div>`;
+    }).join('');
+
+    tabsHtml = `
+      <div class="caption">候補数: ${candidates.length}件 (上位${numToShow}件を表示)</div>
+      <div class="tabs-container" id="rankTabs">
+        <div class="tab-headers">${tabHeaders}</div>
+        ${tabPanels}
+      </div>`;
+  } else {
+    tabsHtml = `<div class="msg msg-info">このジョブ名には候補がありません。</div>`;
+  }
+
+  $resultsArea.innerHTML = `
+    <hr class="divider">
+    <div class="results-header">📊 検索結果: <code>${escapeHtml(state.uploadedFilename || '')}</code></div>
+    <h2 style="margin-bottom:1rem;">ジョブ検索結果 (${escapeHtml(selectedGroup.yss_id_display)})</h2>
+    <div class="section-title">ジョブ名</div>
+    <div class="job-buttons">${jobButtonsHtml}</div>
+    <div class="section-title">スコア順位</div>
+    ${tabsHtml}
+  `;
+}
+
+// ── 1 件の候補を描画 ──────────────────────────────
+// 各 st.tabs 内の候補詳細表示に対応。
+function renderCandidate(c) {
+  // 作業手順
+  const matchedText = c.matched_text && String(c.matched_text).trim();
+  const matchedHtml = matchedText
+    ? `<div class="candidate-detail"><strong>作業手順:</strong></div><div class="plain-text">${escapeHtml(matchedText)}</div>`
+    : `<div class="msg msg-info">作業手順の情報がありません</div>`;
+
+  // コメント
+  const comment = c.comment && String(c.comment).trim();
+  const commentHtml = comment
+    ? `<div class="candidate-detail"><strong>コメント:</strong></div><div class="msg msg-info">${escapeHtml(comment)}</div>`
+    : `<div class="msg msg-info">コメントがありません</div>`;
+
+  // 改訂文書案
+  const revDraft = c.revision_draft && String(c.revision_draft).trim();
+  const revDraftHtml = revDraft
+    ? `<div class="candidate-detail"><strong>改訂文書案:</strong></div><p class="revision-draft-text">${escapeHtml(revDraft)}</p>`
+    : `<div class="candidate-detail"><strong>改訂文書案:</strong></div><div class="msg msg-info">改訂文書案がありません</div>`;
+
+  // 注意事項
+  const notes = (c.revision_notes || []).filter(n => n && String(n).trim());
+  const notesHtml = notes.length > 0
+    ? `<div class="candidate-detail"><strong>注意事項:</strong></div>
+       <ul class="notes-list">${notes.map(n => `<li>${escapeHtml(String(n).trim())}</li>`).join('')}</ul>`
+    : `<div class="candidate-detail"><strong>注意事項:</strong></div><div class="msg msg-info">注意事項はありません</div>`;
+
+  // スコア表示
+  const score     = Number(c.score || 0).toFixed(2);
+  const proximity = Number(c.proximity || 0).toFixed(2);
+  const llmScore  = Number(c.llm_score || 0).toFixed(1);
+
+  return `
+    <h4 style="margin-bottom:0.75rem;">詳細情報</h4>
+    <div class="candidate-detail"><strong>ジョブ名:</strong> <span class="value">${escapeHtml(c.job_name || 'N/A')}</span></div>
+    <div class="candidate-detail"><strong>項番:</strong> <span class="value">${escapeHtml(String(c.item_no ?? 'N/A'))}</span></div>
+    ${matchedHtml}
+    <div class="candidate-detail"><strong>事実一致:</strong> <span class="value">${escapeHtml(String(c.fact_match ?? 'N/A'))}</span></div>
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">総合スコア</div>
+        <div class="metric-value">${score}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">近接度</div>
+        <div class="metric-value">${proximity}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">LLMスコア</div>
+        <div class="metric-value">${llmScore}</div>
+      </div>
+    </div>
+    ${commentHtml}
+    <hr class="divider">
+    ${revDraftHtml}
+    ${notesHtml}
+  `;
+}
+
+// ── TO 情報の描画 ──────────────────────────────────
+function renderToInfo() {
+  $toInfoSection.style.display = 'block';
+  $toInfoSection.innerHTML = `
+    <div class="to-info-section">
+      <div class="to-info-title">TO情報</div>
+      <div class="to-info-grid">
+        <div class="to-info-box">
+          <div class="box-header">TOナンバー：${escapeHtml(state.toNumber)}</div>
+        </div>
+        <div class="to-info-box">
+          <div class="box-header">トリプルSN：${escapeHtml(state.tripleSn)}</div>
+        </div>
+        <div class="to-info-box">
+          <div class="box-header">変更前</div>
+          <div class="box-content">${escapeHtml(state.beforeText || '（データなし）')}</div>
+        </div>
+        <div class="to-info-box">
+          <div class="box-header">変更後</div>
+          <div class="box-content">${escapeHtml(state.afterText || '（データなし）')}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── デバッグ情報の更新 ────────────────────────────
+function updateDebug() {
+  $debugSection.style.display = 'block';
+  document.getElementById('debugRawJson').textContent =
+    JSON.stringify(state.apiResult, null, 2);
+
+  const $extracted = document.getElementById('debugExtracted');
+  if (state.allCandidates && Object.keys(state.allCandidates).length > 0) {
+    let html = `<div class="msg msg-success">✅ 抽出された YSS_ID 数: ${Object.keys(state.allCandidates).length}</div>`;
+    for (const [yssId, candidates] of Object.entries(state.allCandidates)) {
+      html += `<div style="margin:0.25rem 0;"><strong>${yssId}</strong>: ${candidates.length}件</div>`;
+      candidates.slice(0, 3).forEach((c, i) => {
+        html += `<div style="color:var(--text-muted);font-size:0.75rem;margin-left:0.5rem;">
+          [${i}] ${c.job_name || '不明'}, rank=${c.rank ?? 'なし'} (${typeof c.rank})</div>`;
+      });
+    }
+    $extracted.innerHTML = html;
+  } else {
+    $extracted.innerHTML = `<div class="msg msg-error">❌ 候補が抽出できませんでした</div>`;
+  }
+}
+
+// ── HTML エスケープ ─────────────────────────────
+// ユーザー由来の文字列を innerHTML に入れる際、XSS を防ぐ。
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ── 検索実行ボタン ─────────────────────────────────
+// 本来は Dify API にリクエストを送るが、
+// ここではデモとしてスタブデータ取得と同等の流れを実行する。
+$searchBtn.addEventListener('click', async () => {
+  // 注意: 実運用では fetch() で Dify API を叩く。
+  // ここではファイルが選択されていることの確認デモ。
+  showSpinner('ファイルをアップロード中...');
+
+  // 実際の API 呼び出しの擬似コード（コメントで学習用に残す）:
+  /*
+  const formData = new FormData();
+  formData.append('file', state.diffFile);
+  formData.append('user', 'demo-user');
+  
+  const uploadRes = await fetch(`${BASE_URL}/v1/files/upload`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${API_KEY}` },
+    body: formData
+  });
+  const uploadJson = await uploadRes.json();
+  const fileId = uploadJson.id;
+  
+  const workflowRes = await fetch(`${BASE_URL}/v1/workflows/run`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      inputs: { yss_diff_file: { type: 'document', transfer_method: 'local_file', upload_file_id: fileId } },
+      response_mode: 'blocking',
+      user: 'demo-user'
+    })
+  });
+  const result = await workflowRes.json();
+  */
+
+  // デモ: 2秒待ってスタブデータをロード
+  await new Promise(r => setTimeout(r, 2000));
+  $spinnerText.textContent = 'ワークフロー実行中...（最大3分程度かかる場合があります）';
+  await new Promise(r => setTimeout(r, 1000));
+
+  // スタブデータで結果を表示
+  loadStubData();
+  hideSpinner();
+  $searchStatus.innerHTML = `<div class="msg msg-success">✅ ワークフロー完了！（デモモード）</div>`;
+});
+
+// ── スタブデータ取得 ──────────────────────────────
+// テスト用のハードコードされたサンプルデータ。
+// 本来は response-example.json から読み込む。
+document.getElementById('stubBtn').addEventListener('click', () => {
+  loadStubData();
+});
+
+function loadStubData() {
+  // サンプルデータ（response-example.json の模擬）
+  const stubData = {
+    text: [
+      {
+        "YSS_ID:1": [
+          {
+            job_name: "O20-1.xlsx",
+            item_no: "3.A.(1)",
+            rank: 1,
+            score: 4.85,
+            proximity: 0.92,
+            llm_score: 9.5,
+            matched_text: "エンジンカウリング取り外し手順:\n1. カウルファスナーを全数解除\n2. 油圧ラインの接続を確認\n3. カウリングを前方にスライドさせて取り外す",
+            fact_match: "一致",
+            comment: "YSS変更内容と高い関連性があります。手順3の取り外し方向に注意してください。",
+            revision_draft: "エンジンカウリング取り外し時、油圧ライン保護カバーの装着を追加（Rev.C適用）",
+            revision_notes: ["油圧ライン損傷防止のため保護カバー必須", "改訂履歴をRev.Cとして記録すること"]
+          },
+          {
+            job_name: "O20-1.xlsx",
+            item_no: "3.A.(2)",
+            rank: 2,
+            score: 3.72,
+            proximity: 0.85,
+            llm_score: 8.0,
+            matched_text: "カウリング再取り付け手順:\n1. ガスケットの状態を確認\n2. 位置合わせピンに沿ってセット\n3. ファスナーを規定トルクで締結",
+            fact_match: "部分一致",
+            comment: "関連する逆手順です。ガスケット交換基準の確認をお勧めします。",
+            revision_draft: "",
+            revision_notes: []
+          },
+          {
+            job_name: "O20-1.xlsx",
+            item_no: "3.B.(1)",
+            rank: 3,
+            score: 2.10,
+            proximity: 0.61,
+            llm_score: 6.5,
+            matched_text: "エンジンマウント点検手順",
+            fact_match: "不一致",
+            comment: "間接的な関連のみ。",
+            revision_draft: "",
+            revision_notes: []
+          },
+          {
+            job_name: "O25-3.xlsx",
+            item_no: "5.C.(1)",
+            rank: 1,
+            score: 4.50,
+            proximity: 0.90,
+            llm_score: 9.0,
+            matched_text: "翼端灯交換手順:\n1. サーキットブレーカーをOFFにする\n2. レンズカバーを取り外す\n3. ランプユニットを交換\n4. 点灯試験を実施",
+            fact_match: "一致",
+            comment: "LED化に伴う手順変更が必要です。",
+            revision_draft: "ランプユニットをLEDタイプ（P/N: LED-2847）に変更。配線アダプタ（P/N: ADP-110）の追加装着が必要。",
+            revision_notes: ["従来型との互換性なし", "点灯試験時間を30秒から60秒に延長"]
+          }
+        ]
+      },
+      {
+        "YSS_ID:2": [
+          {
+            job_name: "O30-2.xlsx",
+            item_no: "2.D.(1)",
+            rank: 1,
+            score: 4.20,
+            proximity: 0.88,
+            llm_score: 8.5,
+            matched_text: "燃料フィルター交換手順:\n1. 燃料遮断バルブを閉止\n2. 残圧を解放\n3. フィルターエレメントを交換\n4. バルブを開放し漏れ確認",
+            fact_match: "一致",
+            comment: "フィルター型番の変更に対応する改訂が必要です。",
+            revision_draft: "フィルターエレメント型番を FE-3300A から FE-3300B に変更。取付方向矢印の確認を追加。",
+            revision_notes: ["旧型番 FE-3300A は廃番予定", "Oリングの同時交換を推奨"]
+          }
+        ]
+      },
+      {
+        "YSS_ID:3": [
+          {
+            job_name: "",
+            item_no: "-",
+            rank: 1,
+            score: 0,
+            proximity: 0,
+            llm_score: 0,
+            matched_text: "",
+            fact_match: "N/A",
+            comment: "対象となるジョブ名.xlsxファイルが見つかりませんでした。",
+            revision_draft: "",
+            revision_notes: []
+          }
+        ]
+      }
+    ]
+  };
+
+  const mockApiResponse = {
+    data: {
+      status: 'succeeded',
+      outputs: stubData
+    }
+  };
+
+  // 状態を更新
+  state.apiResult = mockApiResponse;
+  state.allCandidates = extractAllCandidates(mockApiResponse);
+  state.uiData = transformToUiSchema(state.allCandidates);
+  state.uploadedFilename = 'スタブデータ（サンプル）';
+  state.selectedYssId = null;
+  state.selectedJobName = null;
+
+  // サンプル TO 情報
+  state.toNumber = '1F-16C-2-70JG-00-1';
+  state.tripleSn = '27-71-16';
+  state.beforeText = 'カウリング取り外し時、保護カバー不要';
+  state.afterText = 'カウリング取り外し時、油圧ライン保護カバーを装着すること（Rev.C）';
+
+  // UI 更新
+  updateYssSelector();
+  state.selectedYssId = state.uiData.yss_groups[0]?.yss_id;
+  if ($yssSelect.value !== state.selectedYssId) {
+    $yssSelect.value = state.selectedYssId;
+  }
+  renderResults();
+  updateDebug();
+}
+</script>
+
+</body>
+</html>
