@@ -1,4 +1,7 @@
 
+https://nextjs.org/docs/app/getting-started/project-structure
+
+
 ```bash
 npx create-next-app@latest my-app --yes
 
@@ -76,3 +79,6 @@ app/blog/_components/Post.tsx ：_をつけてるのでRouting辿り着けない
 app/blog/_lib/data.ts ：_をつけてるのでRouting辿り着けない 
 
 ## インターセプト route
+@slotではめ込む
+
+@modal
