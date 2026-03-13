@@ -1,0 +1,9 @@
+[project]
+name="settingstraining"
+version="0.0.1"
+description="pydantic settingsのトレーニング"
+readme="README.md"
+requires-python=">=3.11"
+dependencies = [
+    "pydantic-settings>=2.13.1",
+]

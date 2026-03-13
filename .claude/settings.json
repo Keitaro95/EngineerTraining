@@ -1,0 +1,36 @@
+
+
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest*)",
+      "Bash(git diff*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(uv publish*)"
+    ],
+    "deny": [
+      "Bash(curl*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Bash(rm -rf*)"
+    ]
+  },
+  "tools": {
+    "run": {
+      "blocked_commands": [
+        "rm",
+        "rm -rf",
+        "sudo",
+        "shutdown",
+        "reboot",
+        "mkfs",
+        "dd",
+        "chmod 777",
+        "chown root"
+      ]
+    }
+  }
+}
