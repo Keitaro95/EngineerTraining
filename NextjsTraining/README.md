@@ -194,3 +194,7 @@ app/
 
 3/20
 https://nextjs.org/docs/app/getting-started/layouts-and-pages
+
+
+3/21
+https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-dynamic-segment
