@@ -82,3 +82,115 @@ app/blog/_lib/data.ts ：_をつけてるのでRouting辿り着けない
 @slotではめ込む
 
 @modal
+
+### かいそうこうぞう
+
+```js
+[img](NextjsTraining/nestedlayout.png)
+
+<Layout>
+  <Template>
+    <ErrorBoundary fallback={<Error />}>
+      <Suspense fallback={<Loading />}>
+        <ErrorBoundary fallback={<NotFound />}>
+          <Page />
+        </ErrorBoundary>
+      </Suspense>
+  </Template>
+</Layout>
+
+
+```
+
+even though route structure is defined through folders, a route is not publicly accessible until a page.js or route.js file is added to a route segment.
+
+page.jsが前提でroutingが起きる
+nextjsのシステム的にpage.jsありきでURLが決まる
+
+だから、UIコンポーネント置いてるだけのディレクトリにはpage.jsおかないでいい
+そうやって、制御できる
+
+
+
+app/
+  dashboard/ → /dashboard
+    page.js
+    settings/ → /dashboard/settings
+      page.js
+  api/
+    route.js → /api
+
+/Users/keitarosasaki/Documents/エンジニアトレーニング/NextjsTraining/routing.png
+
+
+_をつけたファイルは not routableになるよ
+
+/dashboard/_lib/page.js　→ not routable
+でもあんまこうしないで private　フォルダに置くのがいいよ
+
+
+
+app/
+  (admin)/
+    dashboard/
+        page.js → /dashboard
+
+
+## Nextjs大体こう
+
+pj/
+  src/
+    app/
+      layout.js
+      page.js
+  package.json
+  next.config.js
+
+
+### ルート戦略
+https://nextjs.org/docs/app/getting-started/project-structure#store-project-files-in-top-level-folders-inside-of-app
+
+app/ を pure routingのためのフォルダにする
+
+pj/
+  components/
+    ...
+  lib/
+    ...
+  app/
+    dashboard/
+      page.js
+    page.js
+
+
+### feature別
+pj/
+  app/
+    components/
+      ...
+    lib/
+      ...
+    dashboard/
+      components/
+      lib/
+      page.js
+    page.js
+
+### route別
+app/
+  layout.js 子供の中に置くなら消す
+  (marketing)
+    layout.js このdirの中のlayout
+    about/
+      page.js
+    blog/
+      page.js
+  (shop)
+    layout.js このdirの中のlayout
+    loading.js このdirの中のloading
+    account/
+      page.js
+
+
+3/20
+https://nextjs.org/docs/app/getting-started/layouts-and-pages

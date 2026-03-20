@@ -1,6 +1,6 @@
 
 
-from torinohon import settings
+from LangGraph import settings
 
 
 
