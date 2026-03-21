@@ -198,3 +198,33 @@ https://nextjs.org/docs/app/getting-started/layouts-and-pages
 
 3/21
 https://nextjs.org/docs/app/getting-started/layouts-and-pages#creating-a-dynamic-segment
+
+slugってのは最終/以下で
+?でつながるのがparams
+/blog/hello?page=2
+        ↑       ↑
+     params  searchParams
+  { slug: "hello" }  { page: "2" }
+
+Page.tsx：デフォルトで用意されてるPagePropsを使う
+```js
+export default async function Page(props: PageProps<'/blog/[slug]'>) {
+  const { slug } = await props.params
+  return <h1>Blog post: {slug}</h1>
+}
+```
+layout.tsx：デフォルトで用意されてるPagePropsを使う
+```js
+export default function Layout(props: LayoutProps<'/dashboard'>) {
+  return (
+    <section>
+      {props.children}
+      {/* If you have app/dashboard/@analytics, it appears as a typed slot: */}
+      {/* {props.analytics} */}
+    </section>
+  )
+}
+```
+
+### 3/22
+https://nextjs.org/docs/app/getting-started/linking-and-navigating

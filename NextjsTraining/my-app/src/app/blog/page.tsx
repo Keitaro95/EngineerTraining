@@ -7,7 +7,7 @@ export default async function Page() {
 
     return (<div>
                 <h1>Blog</h1>
-                <p>this page route is "/blog" </p>
-                <p>file is "app/blog/page.tsx"</p>
+                <p>this page route is /blog </p>
+                <p>file is app/blog/page.tsx</p>
             </div>)
 }

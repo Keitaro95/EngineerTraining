@@ -1,27 +1,40 @@
 // []をつけるとこでダイナミックルーティングになる
 
-// ここで、 dbやapiからくる値をslugにしている
+// key, valueのレコード
+const dummyPosts: Record<string, { title: string; content: string }> = {
+        "hello-world": { title: "Hello World", content: "これは初めのコンテンツ"},
+        "nextjs-tips": { title: "Next.js Tips", content: "便利なTipsを紹介します"},
+        "abc": { title: "ABC", content: "テスト投稿です"},
+    }
+
+    
+
 export async function generateStaticParams() {
+    // ここで、 dbやapiからくる値をslugにしている
     // const posts = await fetch('/api/posts').then(res => res.json())
 
-    const DummyPosts = [
-        { slug: "hello-world" },
-        { slug: "nextjs-tips" },
-        { slug: "abc" },
-    ]
-
-    // 本当は postsをmapするけどここではdammyを使っている
-    return DummyPosts.map((DummyPosts) => ({
-        slug: DummyPosts.slug
-    }))
+    // dummyPosts slugをキーに（"hello-world", "nextjs-tips", "abc"）を配列にして返す
+    return Object.keys(dummyPosts).map((slug) => ({ slug: slug }))
 }
 
+export async function getPost(slug: string, ) {
+    return dummyPosts[slug] ?? null
+}
 // 
-export default async function Page({ params }: { params: Promise<{ slug: string }>}) {
+export default async function Page({
+     params,
+    }: {
+        params: Promise<{ slug: string }>
+    }) {
     const { slug } = await params
-    return (<div>
-                <h1>{slug}</h1>
-                <p>このページは app/boag/[slug]/page.tsxの内容が表示されています</p>
-                <p>slugは、urlが "/blog/abc" なら,h1にslug名 abc が表現されているはずです</p>
-            </div>)
-}
+    const post = await getPost(slug)
+        return (
+        <div>
+            <h1>this slug is {slug}</h1>
+            <h1>this title is {post.title}</h1>
+            <p>this content: {post.content}</p>
+
+            <p>このページは app/boag/[slug]/page.tsxの内容が表示されています</p>
+            <p>slugは、urlが /blog/abc なら,h1にslug名 abc が表現されているはずです</p>
+        </div>)
+    }
