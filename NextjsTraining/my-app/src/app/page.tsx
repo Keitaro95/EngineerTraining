@@ -1,4 +1,4 @@
-
+import Carousel from './carousel'
 
 export default async function Page({
   params, // /blog/[slug] → { slug: "hello" }
@@ -9,9 +9,13 @@ export default async function Page({
 }) {
   const { slug } = await params
   const filters = (await searchParams).filters
-  return <div>
+  return (
+          <div>
             <h1>Hello Next.js!</h1>
             <p>this query is {filters}</p>
             <p>this page slug is {slug}</p>
+            <Carousel />
           </div>
+          
+        )
 }

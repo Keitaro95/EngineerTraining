@@ -228,3 +228,101 @@ export default function Layout(props: LayoutProps<'/dashboard'>) {
 
 ### 3/22
 https://nextjs.org/docs/app/getting-started/linking-and-navigating
+
+デフォルトではサーバーからレンダリングされる
+server rendering
+prefetch
+streaming
+client-side transition
+でfast and responsiveにできるよ
+
+LayoutとPageは デフォルトでReact Server Component=つまりサーバーレンダリング
+サーバーレンダリングには2種類ある
+Prerendering（事前レンダリング）:
+ビルド時 or 再検証時	
+結果がキャッシュされる。静的コンテンツ向き
+
+Dynamic Rendering（動的レンダリング）：
+リクエスト時
+クライアントのリクエストに応じてその場で生成。動的コンテンツ向き
+
+Next.js の対策：
+
+### Prefetching（プリフェッチ） — ユーザーが訪問しそうなルートを事前に取得しておく
+Client-side transitions（クライアントサイド遷移） — ページ遷移をブラウザ側で処理することで体感速度を向上させる
+
+Dynamic Route でプリフェッチをスキップする
+ユーザーが /dashboard にホバーしただけで
+→ サーバーでDBクエリ実行 → 無駄なコスト発生
+訪問するかどうかわからないページのために、サーバーで余分な処理をしないための最適化です。
+なのでloading.tsx を追加
+Dynamic Route → 部分プリフェッチ → loading UIを即表示 → 体験改善
+
+
+https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
+
+クライアントサイドトランジション
+例えば
+
+```js
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        
+        <nav>
+          <Link href="/">Home</Link>
+          <Link href="/dashboard">Dashboard</Link>
+          {/* ↓ 必要ないリソースはprefetchしない */}
+          <Link prefetch={false}  href="/blog">Dashboard</Link>
+        </nav>
+
+        {/* ↓ ここだけページごとに差し替わる */}
+        <main>{children}</main>
+      </body>
+    </html>
+  );
+}
+```
+
+
+### 3/23
+Server and Client Components
+https://nextjs.org/docs/app/getting-started/server-and-client-components
+
+
+
+
+
+
+### client Componentを使うとき
+Client Componentsを使うと機能的にinteractive, browserAPIができるよ
+- State and event handlers / onClick, onChange
+- ライフサイクルロジック / useEffect
+- ブラウザでしか使えないAPI / localStorage, window, Navigator
+- reactのカスタムフック
+
+### Server Component
+layoutとpagesはserver componentsだよ：デフォルトはサーバーサイド
+- serverからデータやAPI取得
+- API keyやtoken, secretを使う
+- ブラウザに送るjsを減らしたい
+- Improve the First Contentful Paint (FCP), and stream content progressively to the client.
+
+
+サードパーティ
+Nextjsは<Carousel /> 
+ライブラリ：acme-carousel　
+が client onlyだと知らない
+
+
+API_KEYはサーバーの秘密情報ですが、クライアントで実行すると空文字列になるだけでエラーにならず、気づきにくいバグになります。
+
+
+
+### 3/23
+https://nextjs.org/docs/app/getting-started/fetching-data
+
+
+
+
