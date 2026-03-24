@@ -8,9 +8,10 @@ import 'server-only'
 // APIコールが失敗するが、原因がわかりにくい
 
 export async function getData() {
+    if (!process.env.API_KEY) throw new Error('API_KEY is not set')
     const res = await fetch('https://external-service.com/data', {
         headers: {
-            authorization: process.env.API_KEY ?? '',
+            authorization: process.env.API_KEY
         },
     })
     return res.json()

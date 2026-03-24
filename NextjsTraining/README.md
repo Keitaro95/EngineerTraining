@@ -318,11 +318,73 @@ Nextjsは<Carousel />
 
 API_KEYはサーバーの秘密情報ですが、クライアントで実行すると空文字列になるだけでエラーにならず、気づきにくいバグになります。
 
-
-
 ### 3/23
 https://nextjs.org/docs/app/getting-started/fetching-data
 
+### 3/24
+データフェッチ
+
+### server component
+1. The fetch API
+2. An ORM or database
+
+
+### streamingする方法
+- loading.jsで囲む
+- <Suspense>で囲む
+
+<Suspense> を使うと、ページのどの部分をストリーミングするかをより細かく制御できます。
+例えば、<Suspense> バウンダリの外側にあるページコンテンツはすぐに表示し
+バウンダリの内側にあるブログ投稿の一覧はストリーミングで読み込む、といったことが可能です。
+
+
+最良のユーザー体験のために、アプリが応答していることをユーザーが理解できるような、意味のあるローディング状態を設計することを推奨します。
+例えば、スケルトンやスピナーを使用したり、カバー写真やタイトルなど、次の画面の小さくても意味のある一部を表示したりすることができます。
+開発中は、React DevToolsを使用してコンポーネントのローディング状態をプレビューおよび検査できます。
 
 
 
+### client component
+https://nextjs.org/docs/app/getting-started/fetching-data#client-components
+
+``` ts
+// app/blog/page.tsx
+import Posts from '@/app/ui/posts'
+import { Suspense } from 'react'
+ 
+export default function Page() {
+  // Don't await the data fetching function
+  const posts = getPosts() // ← await なし、Promise のまま
+ 
+  return (
+    // use() がサスペンドしている間、<Suspense> の fallback が表示される。Promise が解決されたら <Posts> が描画される。
+    <Suspense fallback={<div>Loading...</div>}>
+      <Posts posts={posts} />
+    </Suspense>
+  )
+}
+
+// app/ui/posts.tsx
+'use client'
+import { use } from 'react'
+ 
+export default function Posts({
+  posts,
+}: {
+  posts: Promise<{ id: string; title: string }[]>
+}) {
+  const allPosts = use(posts) // Promise を受け取ると、解決されるまでコンポーネントの処理を**サスペンド（一時停止）**する。
+ 
+  return (
+    <ul>
+      {allPosts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+
+```
+
+
+https://nextjs.org/docs/app/getting-started/fetching-data#community-libraries
