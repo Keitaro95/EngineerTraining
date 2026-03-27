@@ -386,5 +386,30 @@ export default function Posts({
 
 ```
 
-
 https://nextjs.org/docs/app/getting-started/fetching-data#community-libraries
+サードパーティ
+例えば tanstack
+
+```tsx
+import { useQuery } from '@tanstack/react-query'
+
+function Todos() {
+  状態を保持してくれる
+  const { data, isPending, error } = useQuery({
+    引数1：クエリ
+    queryKey: ['todos'],　
+    引数2：fetch関数
+    queryFn: () => fetch('/api/todos').then(r => r.json()),
+  })
+
+  状態を展開できる
+  if (isPending) return <span>Loading...</span>
+  if (error) return <span>Oops!</span>
+  データを展開する
+  return <ul>{data.map(t => <li key={t.id}>{t.title}</li>)}</ul>
+}
+
+export default Todos
+```
+
+https://nextjs.org/docs/app/getting-started/fetching-data#parallel-data-fetching
