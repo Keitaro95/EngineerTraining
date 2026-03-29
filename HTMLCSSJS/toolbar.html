@@ -1,0 +1,263 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+</head>
+
+
+<!-- 
+ボタンは横並び
+ボタンの間のギャップ
+縦方向に対しては中央に配置
+左よせ -->
+<div class="
+    flex 
+    gap-x-2 
+    items-center 
+    justify-start
+    py-1
+    px-3
+    bg-white">
+
+    <!-- 
+    disabled属性で制御
+
+    ボタンの中は縦並び -->
+    <button id="btn-new"
+        class="
+        flex
+        flex-col
+        gap-y-1
+        items-center
+        justify-center
+        min-w-[42px]
+        min-h-[42px]
+        px-[15px]
+        py-2
+        bg-gray-200
+        border-none
+        rounded-md
+        cursor-pointer
+        hover:bg-[rgb(0_26_120)/10%]
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+        ">
+        <svg 
+            width="20"
+            height="20"
+            viewbox="0 0 24 24"
+            fill="none"
+            stroke="#505050"
+            stroke-width="2"
+        >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        
+        <span class="text-[12px] text-[#505050]">新規</span>
+    
+    </button>
+    <button>保存</button>
+    <button>CSV</button>
+    <button>EXCEL</button>
+    <button>削除</button>
+
+    <div class="w-px h-10 bg-gray-300"></div>
+
+     <!-- Group 2: 印刷・ビュー・取消・表示・終了など -->
+    <button>印刷</button>
+    <button>ビュー</button>
+    <button>取消</button>
+    <button>表示</button>
+    <button>終了</button>
+
+     <!-- セパレーター -->
+    <div class="w-px h-10 bg-gray-300"></div>
+
+    <!-- Group 3: マニュアル・MFZ -->
+    <button>マニュアル</button>
+    <button>MFZ</button>
+
+    <!-- セパレーター -->
+    <div class="w-px h-10 bg-gray-300"></div>
+
+    <!-- Group 4: ナビゲーション -->
+    <button>先頭</button>
+    <button>前</button>
+    <button>次</button>
+    <button>最後</button>
+</div>
+
+<input 
+    id="input" 
+    type="text" 
+    placeholder="type something" 
+    class="border p-2 mt-4">
+<p 
+    id="status" 
+    class="text-sm text-gray-500 mt-1">状態：保存済み</p>
+
+<script>
+    const btnNew = document.getElementById('btn-new');
+    let isSaved = false // 初期状態は saveされていない
+
+    function updateButtons(isSaved) {
+        btnNew.disabled = !isSaved;
+    }
+    
+    updateButtons(isSaved)
+    // updateButtons(true)
+    updateButtons(false)
+</script>
+
+<!-- 
+<script>
+    const btnNew  = document.getElementById('btn-new');
+    const btnSave = document.getElementById('btn-save');
+    const input   = document.getElementById('input');
+    const status  = document.getElementById('status');
+
+    let isSaved = true; // 初期状態：保存済み
+
+    // ボタンの有効/無効を状態に合わせて更新
+    function updateButtons() {
+        btnNew.disabled  = !isSaved; // 保存済みのときだけ新規を有効
+        btnSave.disabled = isSaved;  // 未保存のときだけ保存を有効
+        status.textContent = `状態：${isSaved ? '保存済み' : '未保存（変更あり）'}`;
+    }
+
+    // 入力があったら「未保存」に変える
+    input.addEventListener('input', () => {
+        isSaved = false;
+        updateButtons();
+    });
+
+    // 保存ボタンを押したら「保存済み」に変える
+    btnSave.addEventListener('click', () => {
+        // ここに実際の保存処理（API呼び出しなど）を書く
+        console.log('保存しました:', input.value);
+
+        isSaved = true;
+        updateButtons();
+    });
+
+    // 新規ボタンを押したらリセット
+    btnNew.addEventListener('click', () => {
+        input.value = '';
+        isSaved = true;
+        updateButtons();
+    });
+
+    // 初期化
+    updateButtons();
+</script>
+
+
+Vue
+
+<template>
+  <div class="flex gap-x-2 items-center py-1 px-3 bg-white">
+
+    <button
+      :disabled="!isSaved"
+      @click="handleNew"
+      class="px-4 py-2 bg-gray-200 rounded-md cursor-pointer
+             hover:bg-blue-50
+             disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      新規
+    </button>
+
+    <button
+      :disabled="isSaved"
+      @click="handleSave"
+      class="px-4 py-2 bg-gray-200 rounded-md cursor-pointer
+             hover:bg-blue-50
+             disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      保存
+    </button>
+
+  </div>
+
+  <input v-model="inputValue" @input="isSaved = false" placeholder="何か入力してみて" class="border p-2 mt-4" />
+  <p class="text-sm text-gray-500 mt-1">状態：{{ isSaved ? '保存済み' : '未保存（変更あり）' }}</p>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const isSaved   = ref(true)
+const inputValue = ref('')
+
+function handleSave() {
+  console.log('保存しました:', inputValue.value)
+  isSaved.value = true
+}
+
+function handleNew() {
+  inputValue.value = ''
+  isSaved.value = true
+}
+</script>
+React
+
+import { useState } from 'react'
+
+export default function Toolbar() {
+  const [isSaved, setIsSaved]     = useState(true)
+  const [inputValue, setInputValue] = useState('')
+
+  function handleSave() {
+    console.log('保存しました:', inputValue)
+    setIsSaved(true)
+  }
+
+  function handleNew() {
+    setInputValue('')
+    setIsSaved(true)
+  }
+
+  return (
+    <>
+      <div className="flex gap-x-2 items-center py-1 px-3 bg-white">
+
+        <button
+          disabled={!isSaved}
+          onClick={handleNew}
+          className="px-4 py-2 bg-gray-200 rounded-md cursor-pointer
+                     hover:bg-blue-50
+                     disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          新規
+        </button>
+
+        <button
+          disabled={isSaved}
+          onClick={handleSave}
+          className="px-4 py-2 bg-gray-200 rounded-md cursor-pointer
+                     hover:bg-blue-50
+                     disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          保存
+        </button>
+
+      </div>
+
+      <input
+        value={inputValue}
+        onChange={(e) => { setInputValue(e.target.value); setIsSaved(false) }}
+        placeholder="何か入力してみて"
+        className="border p-2 mt-4"
+      />
+      <p className="text-sm text-gray-500 mt-1">
+        状態：{isSaved ? '保存済み' : '未保存（変更あり）'}
+      </p>
+    </>
+  )
+}
+  
+
+-->
