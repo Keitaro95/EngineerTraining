@@ -413,3 +413,32 @@ export default Todos
 ```
 
 https://nextjs.org/docs/app/getting-started/fetching-data#parallel-data-fetching
+
+複数のasyncは並行で起こる
+```tsx
+
+import { getArtist, getAlbums } from '@/app/lib/data'
+
+export default function Page({ params }) {
+
+  const { username } = await params
+  const artist = await getArtist(username)
+  const albums = await getAlbums(username)
+  return <div>{artist.name}</div>
+}
+
+```
+
+React.cache と context providersを使ってfetched data を
+Server and Client Components で共有できる
+同じデータを両方で使いたいとき、愚直にやると2回フェッチが走る。それを防ぐのがこのパターン。
+
+リクエスト到着
+  └─ layout.tsx: getUser() → Promise生成（fetch開始）
+       └─ UserProvider: Promise をコンテキストに保存
+            ├─ Profile (Client): use(promise) → Suspense fallback → 解決後レンダリング
+            └─ DashboardPage (Server): await getUser() → cache済みなので fetch は走らない
+
+
+https://nextjs.org/docs/app/getting-started/mutating-data
+

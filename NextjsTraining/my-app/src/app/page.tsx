@@ -1,4 +1,7 @@
 import Carousel from './carousel'
+import { Suspense } from 'react'
+
+import { Profile } from './ui/profile'
 
 export default async function Page({
   params, // /blog/[slug] → { slug: "hello" }
@@ -10,12 +13,15 @@ export default async function Page({
   const { slug } = await params
   const filters = (await searchParams).filters
   return (
-          <div>
-            <h1>Hello Next.js!</h1>
-            <p>this query is {filters}</p>
-            <p>this page slug is {slug}</p>
-            <Carousel />
-          </div>
+          <Suspense fallback={<div>Loading profile...</div>}>
+            <Profile />
+            <div>
+              <h1>Hello Next.js!</h1>
+              <p>this query is {filters}</p>
+              <p>this page slug is {slug}</p>
+              <Carousel />
+            </div>
+          </Suspense>
           
         )
 }
