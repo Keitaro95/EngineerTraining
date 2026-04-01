@@ -2,6 +2,7 @@ import Carousel from './carousel'
 import { Suspense } from 'react'
 
 import { Profile } from './ui/profile'
+// import { createPost } from '@/lib/actions'とせずコンポーネントの中に書く
 
 export default async function Page({
   params, // /blog/[slug] → { slug: "hello" }
@@ -10,6 +11,11 @@ export default async function Page({
   params: Promise<{ slug:string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+
+  async function createPost(formData: FormData) {
+    'use server'
+    //...
+  }
   const { slug } = await params
   const filters = (await searchParams).filters
   return (

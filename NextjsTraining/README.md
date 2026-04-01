@@ -442,3 +442,16 @@ Server and Client Components で共有できる
 
 https://nextjs.org/docs/app/getting-started/mutating-data
 
+## Mutating Data
+React Server Functionsを使ってデータをmutateする
+React Server Functions：サーバーで動く非同期の関数。クライアントサイドからreqで呼び出す。Server Actionとも呼ばれる
+
+StartTransition：POSTメソッド
+action を使って formに送られる
+formActionを使ってbuttonに送られる
+
+use server を書いている関数で定義される
+
+https://nextjs.org/docs/app/getting-started/mutating-data
+
+
