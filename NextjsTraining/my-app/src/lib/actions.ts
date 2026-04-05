@@ -2,6 +2,7 @@
 
 
 import { auth } from '@/lib/auth'
+import { refresh } from 'next/cache'
 
 export async function createPost(formData: FormData) {
     'use server'
@@ -12,6 +13,8 @@ export async function createPost(formData: FormData) {
 
     const title = formData.get('title')
     const content = formData.get('content')
+
+    refresh()
 }
 
 export async function deletePost(formData: FormData) {

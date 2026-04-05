@@ -454,4 +454,230 @@ use server を書いている関数で定義される
 
 https://nextjs.org/docs/app/getting-started/mutating-data
 
+クライアントコンポーネントでサーバーファンクションを起こす
+
+```tsx
+
+export default function LikeButton({ initialLikes }: { initialLikes: number }) {
+  const [likes, setLikes] = useState(initialLikes)
+
+  return (
+    <>
+      <p>{likes}</p>
+      <button
+        onClick={async () => {
+          const UpdatedLikes = await incrementLike()
+          setLikes(updatedLikes)
+          }}
+      >
+        Like
+        </button>
+    </>
+  )
+}
+
+```
+
+https://nextjs.org/docs/app/getting-started/mutating-data#revalidate-data
+
+redirectをつかって、データの変更を即時で伝える
+
+```tsx
+'use server'
+ 
+import { auth } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+ 
+export async function createPost(formData: FormData) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error('Unauthorized')
+  }
+  // Mutate data
+  // ...
+ 
+  revalidatePath('/posts')
+  redirect('/posts')
+}
+```
+
+```tsx
+'use server'
+ 
+import { cookies } from 'next/headers'
+ 
+export async function exampleAction() {
+  const cookieStore = await cookies()
+ 
+  // Get cookie
+  cookieStore.get('name')?.value
+ 
+  // Set cookie
+  cookieStore.set('name', 'Delba')
+ 
+  // Delete cookie
+  cookieStore.delete('name')
+}
+```
+
+### useEffectで自動的にmutation更新する
+
+```tsx
+'use client'
+
+import { incrementViews } from './actions'
+import { useState, useEffect, useTransition } from 'react'
+
+export default function ViewCount({ initialViews }: { initialViews: number }) {
+  // 初期表示値（Server Componentなどから受け取る）
+  const [views, setViews] = useState(initialViews)
+
+  // 非同期更新を「遷移」として扱う（UIをブロックしにくくする）
+  const [isPending, startTransition] = useTransition()
+
+  // 初回マウント時に1回だけ実行（[]）
+  useEffect(() => {
+    startTransition(async () => {
+      // Server Actionを呼んでDB側の閲覧数を更新（mutation）
+      const updatedViews = await incrementViews()
+      // 返ってきた最新値でクライアントUIを更新
+      setViews(updatedViews)
+    })
+  }, [])
+
+  // isPending を使うと更新中表示もできる
+  return <p>Total Views: {isPending ? '...' : views}</p>
+}
+```
+
+
+
+
+### cache
+
+https://nextjs.org/docs/app/getting-started/caching
+
+```tsx
+import { cacheLife } from 'next/cache'
+ 
+export async function getUsers() {
+  'use cache'
+  cacheLife('hours')
+  return db.query('SELECT * FROM users')
+}
+```
+
+```tsx
+import { cookies } from 'next/headers'
+import { Suspense } from 'react'
+ 
+async function UserGreeting() {
+  const cookieStore = await cookies()
+  const theme = cookieStore.get('theme')?.value || 'light'
+  return <p>Your theme: {theme}</p>
+}
+ 
+export default function Page() {
+  return (
+    <>
+      <h1>Dashboard</h1>
+      <Suspense fallback={<p>Loading...</p>}>
+        <UserGreeting />
+      </Suspense>
+    </>
+  )
+}
+```
+
+
+リクエストごとにユニークなUUIDなどを生成する
+
+```tsx
+import { connection } from 'next/server'
+import { Suspense } from 'react'
+
+async function UniqueContent() {
+  await connection()
+  const uuid = crypto.randomUUID()
+  return <p>Request ID: {uuid}</p>
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <UniqueContent />
+    </Suspense>
+  )
+}
+
+// 代わりに　use cacheでもいい
+export default function Page() {
+  'use cache'
+  const buildId = crypto.randomUUID()
+  return <p>Build ID: {buildID}</p>
+}
+
+```
+
+### 決定論的な動作はプレレンダリング中に
+このページはjsonを使う場合
+
+```tsx
+import fs from 'node:fs'
+
+export default async function Page() {
+  const content = fs.readFileSync('./config.json', 'utf-8')
+  const constants = await import('./constants.json')
+  const processed = JSON.parse(content).items.map((item) = item.value * 2)
+
+  return (
+    <div>
+      <h1>{constants.appName}</h1>
+      <ul>
+        {processed.map((value, i) => (
+          <li key={i}>{value}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+```
+
+
+静的なシェルに保存される処理（クライアントに保存される）
+- use cache
+- <Suspense>
+- 決定論的操作
+html, rscからなる静的なシェルが生成される=部分プリレンダリング（PPR)
+PPRはNext.jsの機能で、1つのページを静的な部分と動的な部分に分けてレンダリングする仕組みです。
+流れ
+ビルド時: HTML + RSC Payloadからなる静的シェルを生成
+リクエスト時: 静的シェルを即座に返す（高速）
+ストリーミング: 動的部分が完了次第、Suspense fallbackを実際のコンテンツに差し替え
+つまり、従来の「ページ全体が静的 or 動的」という二択ではなく、1つのページ内で静的・動的を共存させることがPPRの本質です。
+
+reactのSuspenseを使うと、Suspenseの中は、取得されるまで待機されることになる。
+メインのPage.tsxが以下の場合この中が待機状態のため
+子供のcomponentは ページ全体のレンダリングが完了するまで何も表示されない。従来のSSR（非Streaming）と同じ挙動になる。
+```tsx
+// app/layout.tsx
+import { Suspense } from 'react'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <Suspense fallback={null}>  {/* ← fallbackが空 = 送れるものがない */}
+        <body>{children}</body>
+      </Suspense>
+    </html>
+  )
+}
+```
+なのでディレクトリに個別にlayout.tsxをおいておく方がいい
+
+
+https://nextjs.org/docs/app/getting-started/caching#putting-it-all-together
+
 
