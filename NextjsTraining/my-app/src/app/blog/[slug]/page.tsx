@@ -20,14 +20,19 @@ export async function generateStaticParams() {
 export async function getPost(slug: string, ) {
     return dummyPosts[slug] ?? null
 }
-// 
+
+import { notFound } from "next/navigation";
 export default async function Page({
      params,
     }: {
         params: Promise<{ slug: string }>
     }) {
     const { slug } = await params
-    const post = await getPost(slug)
+    const post = await getPostBySlug(slug)
+
+    if (!post) {
+        notFound()
+    }
         return (
         <div>
             <h1>this slug is {slug}</h1>

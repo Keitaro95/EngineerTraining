@@ -681,3 +681,146 @@ export default function RootLayout({ children }) {
 https://nextjs.org/docs/app/getting-started/caching#putting-it-all-together
 
 
+
+### 再検証
+https://nextjs.org/docs/app/getting-started/revalidating
+
+- 時間ベースの再検証
+- オンデマンド再検証
+
+
+## エラー処理
+モデルは errorを　valueとして返して欲しいと期待してる
+なので try catch使わないで
+
+```tsx
+// app/actions.ts
+'use server'
+ 
+export async function createPost(prevState: any, formData: FormData) {
+  const title = formData.get('title')
+  const content = formData.get('content')
+ 
+  const res = await fetch('https://api.vercel.app/posts', {
+    method: 'POST',
+    body: { title, content },
+  })
+  const json = await res.json()
+ 
+  if (!res.ok) {
+    return { message: 'Failed to create post' }
+  }
+}
+```
+
+
+```tsx
+//app/ui/form.tsx
+'use client'
+
+import { useActionState } from 'react'
+import { createPost } from '@/app/actions'
+
+const initialState = {
+  message: '',
+}
+
+export function Form() {
+  const [state, formAction, pending] = useActionState(createPost, initialState)
+
+  return (
+    <form action={formAction}>
+      <label htmlFor="title">Title</label>
+      <input type="text" id="title" name="title" required />
+      <label htmlFor="content">Content</label>
+      <textarea id="content" name="content" required />
+      {/* ここでstateの中のmessageでエラー検出 */}
+      {state?.message && <p aria-live="polite">{state.message}</p>}
+      <button disabled={pending}>Create Post</button>
+    </form>
+  )
+}
+
+```
+
+https://nextjs.org/docs/app/getting-started/error-handling#server-components
+
+```tsx
+export default async function Page() {
+  const res = await fetch(`https://...`)
+  const data = await res.json()
+  
+  // この中で 条件分岐
+  if (!res.ok) {
+    return 'There was an error.'
+  }
+ 
+  return '...'
+}
+```
+
+### エラー境界
+捕捉されない例外
+発生するはずのないバグや問題を示す予期せぬエラーは
+エラー境界で捕捉する必要があります。
+
+app/dashboard/error.tsx：関数機能
+app/custom-error-boundary.tsx：境界
+app/some-component.tsx：この中で使う
+
+レンダリング中のエラーを捕捉するように設計されています。アプリ全体をクラッシュさせる代わりに、代替のUIを表示する。
+
+useState, useReducerでエラーをシステム処理する
+```tsx
+'use client'
+ 
+import { useState } from 'react'
+ 
+export function Button() {
+  const [error, setError] = useState(null)
+ 
+  const handleClick = () => {
+    try {
+      // do some work that might fail
+      throw new Error('Exception')
+    } catch (reason) {
+      setError(reason)
+    }
+  }
+ 
+  if (error) {
+    /* render fallback UI */
+  }
+ 
+  return (
+    <button type="button" onClick={handleClick}>
+      Click me
+    </button>
+  )
+}
+```
+
+
+useTransitionでキャッチ
+```tsx
+'use client'
+ 
+import { useTransition } from 'react'
+ 
+export function Button() {
+  const [pending, startTransition] = useTransition()
+ 
+  const handleClick = () =>
+    startTransition(() => {
+      throw new Error('Exception')
+    })
+ 
+  return (
+    <button type="button" onClick={handleClick}>
+      Click me
+    </button>
+  )
+}
+```
+
+https://nextjs.org/docs/app/getting-started/error-handling#global-errors
