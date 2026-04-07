@@ -824,3 +824,244 @@ export function Button() {
 ```
 
 https://nextjs.org/docs/app/getting-started/error-handling#global-errors
+
+
+## CSS
+
+tailwind
+npm install -D tailwindcss @tailwindcss/postcss
+
+postcss.config.mjs
+```mjs
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+}
+```
+
+app/globals.css
+```css
+@import 'tailwindcss'
+```
+
+app/layout.tsx
+```tsx
+import './globals.css'
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>  
+    </html>
+  )
+}
+```
+app/Page.tsx
+
+```tsx
+export default function Page() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <h1 className="text-4xl font-bold">Welcome to Next.js!</h1>
+    </main>
+  )
+}
+```
+
+css module：名前衝突を気にせずに 
+
+app/blog/blog.module.css
+```css
+.blog {
+  padding: 24px;
+}
+```
+
+app/blog/page.tsx　のなかで .blogをアタッチする
+```tsx
+import styles from './blog/module.css'
+
+export default function Page() {
+  return <main className={styles.blog}></main>
+}
+
+```
+
+
+Global CSS
+app/global.css
+
+```css
+body {
+  padding: 20px 20px 60px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+```
+
+app/layout.tsx
+```tsx
+import './global.css'
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+
+```
+We recommend using global styles for truly global CSS (like Tailwind's base styles), Tailwind CSS for component styling, and CSS Modules for custom scoped CSS when needed.
+
+
+外部スタイルシート
+import 'bootstrap/dist/css/bootstrap.css'
+ 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className="container">{children}</body>
+    </html>
+  )
+}
+
+### CSSのインポート順
+To keep CSS ordering predictable:
+
+CSSのインポートはできる限り単一のJavaScriptまたはTypeScriptエントリファイルにまとめる
+グローバルスタイルとTailwindのスタイルシートはアプリケーションのルートでインポートする
+一般的なデザインパターンをユーティリティクラスでカバーできるため、ほとんどのスタイリングにはTailwind CSSを使用する
+Tailwindのユーティリティだけでは不十分な場合は、コンポーネント固有のスタイルにCSS Modulesを使用する
+CSS Modulesのファイル名には一貫した命名規則を使用する（例：`<name>.tsx` よりも `<name>.module.css`）
+重複インポートを避けるために、共通スタイルは共有コンポーネントに切り出す
+ESLintの `sort-imports` のように、インポートを自動ソートするリンターやフォーマッターは無効にする
+`next.config.js` の `cssChunking` オプションを使うと、CSSのチャンク分割方法を制御できる
+
+
+
+Development vs Production
+開発環境（`next dev`）では、CSSの変更はFast Refreshによって即座に反映される。
+本番環境（`next build`）では、すべてのCSSファイルが自動的に結合・ミニファイされ、コード分割された `.css` ファイルとして出力される。これにより、各ルートで読み込まれるCSSは最小限に抑えられる。
+本番環境ではJavaScriptが無効でもCSSは読み込まれるが、開発環境のFast RefreshにはJavaScriptが必要である。
+CSSの順序は開発環境と本番環境で異なる場合があるため、最終的なCSS順序はビルド（`next build`）で必ず確認すること。
+
+
+
+### Image Optimization
+
+Next.jsの `<Image>` コンポーネントはHTMLの `<img>` 要素を拡張し、以下の機能を提供する：
+
+- **サイズ最適化**：WebPなどの最新画像フォーマットを使用し、各デバイスに適したサイズの画像を自動的に配信する。
+- **視覚的安定性**：画像の読み込み中にレイアウトシフトが発生しないよう自動的に防ぐ。
+- **高速なページ読み込み**：ネイティブブラウザの遅延読み込みを使用し、ビューポートに入ったときのみ画像を読み込む。オプションでぼかしプレースホルダーも利用可能。
+- **アセットの柔軟性**：リモートサーバーに保存された画像を含め、オンデマンドで画像をリサイズできる。
+
+画像を静的インポートした場合、Next.jsは自動的に固有の `width` と `height` を判定する。これらの値は画像のアスペクト比の算出に使用され、読み込み中のCumulative Layout Shift（累積レイアウトシフト）を防ぐ。
+
+```tsx
+import Image from 'next/image'
+ 
+export default function Page() {
+  return <Image src="" alt="" />
+}
+```
+
+app
+public
+
+publicに入れたやつは 自動的に '/' 扱いになる
+app/page.tsx
+```tsx
+import Image from 'next/image'
+ 
+export default function Page() {
+  return (
+    <Image
+      src="/profile.png"
+      alt="Picture of the author"
+      width={500}
+      height={500}
+    />
+  )
+}
+
+import Image from 'next/image'
+import ProfileImage from './profile.png'
+ 
+export default function Page() {
+  return (
+    <Image
+      src={ProfileImage}
+      alt="Picture of the author"
+      // width={500} automatically provided
+      // height={500} automatically provided
+      // blurDataURL="data:..." automatically provided
+      // placeholder="blur" // Optional blur-up while loading
+    />
+  )
+}
+```
+
+```tsx
+import Image from 'next/image'
+ 
+export default function Page() {
+  return (
+    <Image
+      src="https://s3.amazonaws.com/my-bucket/profile.png"
+      alt="Picture of the author"
+      width={500}
+      height={500}
+    />
+  )
+}
+```
+
+
+Next.jsはビルド時にリモートファイルにアクセスできないため、リモート画像の場合は `width`・`height`・任意の `blurDataURL` プロパティを手動で指定する必要がある。`width` と `height` は正しいアスペクト比の推定と、画像読み込み時のレイアウトシフト防止に使用される。なお、`fill` プロパティを使用すると、親要素のサイズに合わせて画像を拡大表示することもできる。
+
+リモートサーバーの画像を安全に使用するには、`next.config.js` でサポートするURLパターンのリストを定義する必要がある。悪意ある使用を防ぐため、できる限り具体的に指定すること。例えば、以下の設定では特定のAWS S3バケットからの画像のみを許可する：
+
+```tsx
+import type { NextConfig } from 'next'
+ 
+const config: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 's3.amazonaws.com',
+        port: '',
+        pathname: '/my-bucket/**',
+        search: '',
+      },
+    ],
+  },
+}
+ 
+export default config
+```
+
+
+https://nextjs.org/docs/app/getting-started/fonts
+
+
+
+
+
+
+

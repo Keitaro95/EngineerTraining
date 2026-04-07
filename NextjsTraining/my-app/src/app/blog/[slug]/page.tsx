@@ -43,3 +43,23 @@ export default async function Page({
             <p>slugは、urlが /blog/abc なら,h1にslug名 abc が表現されているはずです</p>
         </div>)
     }
+
+
+import Image from 'next/image'
+ 
+async function PostImage({
+  imageFilename,
+  alt,
+}: {
+  imageFilename: string
+  alt: string
+}) {
+    // const { default: image } = await import(
+    // `@/content/blog/images/${imageFilename}`
+    // )
+  const { default: image } = await import(
+    `../content/blog/images/${imageFilename}`
+  )
+  // image contains width, height, and blurDataURL
+  return <Image src={image} alt={alt} />
+}
