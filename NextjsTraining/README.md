@@ -1057,11 +1057,263 @@ export default config
 ```
 
 
+### font
 https://nextjs.org/docs/app/getting-started/fonts
 
+app/layout.tsx
+```tsx
+import { Geist } from 'next/font/google'
+ 
+const geist = Geist({
+  subsets: ['latin'],
+})
+ 
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={geist.className}>
+      <body>{children}</body>
+    </html>
+  )
+}
+
+import { Geist } from 'next/font/google'
+ 
+const geist = Geist({
+  subsets: ['latin'],
+})
+ 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className={geist.className}>
+      <body>{children}</body>
+    </html>
+  )
+}
+
+import { Roboto } from 'next/font/google'
+ 
+const roboto = Roboto({
+  weight: '400',
+  subsets: ['latin'],
+})
+ 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className={roboto.className}>
+      <body>{children}</body>
+    </html>
+  )
+}
+
+```
+
+## メタデータ
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+app/blog/layout.tsx
+```tsx
+import type { Metadata } from 'next'
+ 
+export const metadata: Metadata = {
+  title: 'My Blog',
+  description: '...',
+}
+ 
+export default function Layout() {}
+```
+
+app/blog/[slug]/page.tsx
+```tsx
+import type { Metadata, ResolvingMetadata } from 'next'
+ 
+type Props = {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+ 
+export async function generateMetadata(
+  { params, searchParams }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const slug = (await params).slug
+ 
+  // fetch post information
+  const post = await fetch(`https://api.vercel.app/blog/${slug}`).then((res) =>
+    res.json()
+  )
+ 
+  return {
+    title: post.title,
+    description: post.description,
+  }
+}
+ 
+export default function Page({ params, searchParams }: Props) {}
+
+```
+
+
+bot対策
+動的にレンダリングされるページでは、Next.js はメタデータを別途ストリーミングし、generateMetadata が解決された後に HTML へ注入します。これにより UI のレンダリングをブロックしません。
+
+ストリーミングメタデータは、視覚的なコンテンツを先にストリーミングできるため、体感パフォーマンスを向上させます。
+
+ストリーミングメタデータは、<head> タグにメタデータがあることを期待するボットやクローラー（例：Twitterbot、Slackbot、Bingbot）に対しては無効化されます。これらは受信リクエストの User Agent ヘッダーを使用して検出されます。
+
+Next.jsはリクエストの User-Agent ヘッダーを確認し、既知のボット・クローラーからのリクエストにはストリーミングを無効化して、完全なHTMLを同期的に返す
+
+Next.js の設定ファイルで htmlLimitedBots オプションを使用することで、ストリーミングメタデータをカスタマイズしたり、完全に無効化したりすることができます。
+
+プリレンダリングされたページは、メタデータがビルド時に解決されるため、ストリーミングを使用しません。
+
+ストリーミングメタデータについて詳しく学ぶ。
+
+import { ImageResponse } from 'next/og'
+
+export default function OGImage() {
+  return new ImageResponse(
+    <div style={{ display: 'flex', fontSize: 60 }}>
+      Hello World
+    </div>,
+    { width: 1200, height: 630 }
+  )
+}
+
+
+### route handler
+appディレクトリ内で
+APIエンドポイントを作成する
+Web標準のRequest/Response APIを使います。
+
+app/api/route.ts
+```tsx
+export async function GET(request: Request) {
+  return Response.json({ message: "Hello!" })
+}
+
+export async function GET(_req: NextRequest, ctx: RouteContext<'/users/[id]'>) {
+  const { id } = await ctx.params
+  return Response.json({ id })
+}
+```
+
+https://nextjs.org/docs/app/getting-started/route-handlers
 
 
 
+### proxy
+
+https://nextjs.org/docs/app/getting-started/proxy
+
+req → proxy でmodify　→ req
 
 
+
+`redirects`の設定を next.config.tsで書いて
+ここでreqに複雑な設定をする
+proxyはauthみたいなfull sessionでは使われない
+許可性のredirectで使われる
+
+root/proxy.ts
+root/src/proxy.ts
+```tsx
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+ 
+// This function can be marked `async` if using `await` inside
+export function proxy(request: NextRequest) {
+  return NextResponse.redirect(new URL('/home', request.url))
+}
+ 
+// Alternatively, you can use a default export:
+// export default function proxy(request: NextRequest) { ... }
+ 
+ここでプロキシしたいpathを書く
+export const config = {
+  matcher: '/about/:path*',
+}
+```
+
+
+## deploy
+**Node.js**
+full機能
+package.jsonに buildとstartがある状態で
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+```
+
+npm run build
+npm run start
+
+
+**Docker**
+k8s運用もできる
+https://nextjs.org/docs/app/getting-started/deploying#templates-1
+
+
+**Static**
+静的サイト / Single-Page-Applicationなど
+static exportをサポートしています
+
+
+**Adapters**
+いろんなInfraに可用性あり
+アダプターAPI
+https://nextjs.org/docs/app/api-reference/config/next-config-js/adapterPath
+
+Next.js公式が検証してる　認証済みAdapterもあります
+https://nextjs.org/docs/app/getting-started/deploying#verified-adapters
+
+CloudflareとかNetlifyは彼らオリジナルのインテグレーションを持っています
+
+
+
+## upgrade
+
+```sh
+npm next upgrade
+npx @next/codemod@canary upgrade latest
+npm i next@latest react@latest react-dom@latest eslint-config-next@latest
+```
+
+
+## メトリクス
+https://nextjs.org/docs/app/guides/analytics#client-instrumentation
+
+root/instrumentation-client.js
+```js
+// Initialize analytics before the app starts
+console.log('Analytics initialized')
+ 
+// Set up global error tracking
+window.addEventListener('error', (event) => {
+  // Send to your error tracking service
+  reportError(event.error)
+})
+```
+
+## Authentification
+認可：username, password
+Session Maganement：Auth stateを管理して全てのreqで送る
+認証：userが受け取れるdataやrouteを決める
+
+
+https://nextjs.org/docs/app/guides/authentication#sign-up-and-login-functionality
 
