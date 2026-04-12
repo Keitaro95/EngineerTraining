@@ -28,6 +28,30 @@ app.add_middleware(
     max_age=600, # プリフライト
 )
 
+"""
+
+
+CORSMiddlewareの内部動作で重要な点がある。
+
+
+allow_origins
+()
+許可オリジンのリスト
+allow_methods
+("GET",)
+許可HTTPメソッド（["*"]で全メソッド）
+allow_headers
+()
+許可リクエストヘッダー
+allow_credentials
+False
+Cookie/認証ヘッダーの許可
+max_age
+600
+プリフライトキャッシュ秒数
+
+"""
+
 # appに router入れるよ
 app.include_router(v1_router, prefix="/api")
 app.include_router(v2_router, prefix="/api")
