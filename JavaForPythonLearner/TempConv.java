@@ -9,8 +9,11 @@ public class TempConv {
         Double cel; // ここをコメントアウトするとエラーが出る
         Scanner in;
         
+        // Scanner がバイト列を解析（パース）して、扱いやすい型に変換
         in = new Scanner(System.in);
         System.out.println("Enter the temperature in F: ");
+        // double で受け取りたい → inをnextDouble()変換する
+        // Javaは型に厳しい言語なので、宣言した型と合わないとコンパイラが弾きます。
         fahr = in.nextDouble();
 
         cel = (fahr -32) * 5.0/9.0;
