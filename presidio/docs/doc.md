@@ -59,11 +59,28 @@ uv sync
 uv run python -m spacy download ja_core_news_trf
 ```
 
-分析器
+**分析器**
 analyzer = AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["ja"])
 
-匿名化エンジンをインスタンスに
+**匿名化エンジンをインスタンスに**
 anonymizer = AnonymizerEngine()
 
-個人情報主
-Recognizer
+
+**個人情報識別のカスタマイズはRecognizerクラスをimportして行う**
+デフォルトの個人情報識別にカスタマイズできる
+- 正規表現/拒否リスト: 固定のパターンに基づく効率的な検出。
+- 固有表現認識(NER): 文脈を考慮した機械学習モデルを使用し、高度な検出を実現。NLPエンジン(spaCyやstanza等)を利用。
+- カスタムロジック: 特定業務やプロジェクト要件に基づいた独自のルールを適用。
+  
+EntityRecognizer：Recognizer全体の基底クラス。loadメソッドとanalyzeメソッドが拡張ポイント。
+LocalRecognizer：ローカルプロセスで使用されるRecognizer。
+PatternRecognizer：正規表現・拒否リストベースのRecognizer。バリデーションや文脈に基づくスコア加算(Context Enhancement)もサポート
+RemoteRecognizer：外部サービスを含むリモートプロセスで使用されるRecognizer。
+
+組み込みrecognizer一覧
+https://github.com/microsoft/presidio/tree/main/presidio-analyzer/presidio_analyzer/predefined_recognizers
+
+
+
+
+
