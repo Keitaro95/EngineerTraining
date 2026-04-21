@@ -3,7 +3,7 @@ name="settingstraining"
 version="0.0.1"
 description="pydantic settingsのトレーニング"
 readme="README.md"
-requires-python=">=3.11"
+requires-python=">=3.12,<3.13"
 dependencies = [
     "anyio>=4.12.1",
     "fastapi>=0.135.1",
@@ -13,7 +13,12 @@ dependencies = [
     "langchain-openai>=1.1.11",
     "langgraph>=1.1.2",
     "langgraph-supervisor>=0.0.31",
+    "numpy>=1.0,<2.0",
+    "presidio-analyzer>=2.2.362",
+    "presidio-anonymizer>=2.2.362",
     "pydantic-settings>=2.13.1",
     "reflex>=0.8.27",
+    "spacy==3.8.14",
     "tavily-python>=0.5.0",
+    "torch==2.2.2",
 ]
