@@ -5,7 +5,8 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { pokemonOptions } from '../_lib/pokemon'
 
 export function PokemonInfo() {
-    // 内部で QueryClient のキャッシュを見に行きます。すでに hydrate 済みのデータがあれば API を叩かず、そのままデータを返します
+    // 内部で QueryClient のキャッシュを見に行きます。
+    // すでに hydrate 済みのデータがあれば API を叩かず、そのままデータを返します
     const { data } = useSuspenseQuery(pokemonOptions)
 
     return (

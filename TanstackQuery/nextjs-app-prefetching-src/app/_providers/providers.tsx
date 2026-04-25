@@ -7,8 +7,6 @@ import type * as React from 'react'
 
 
 // このprovidersがサーバーとクライアントの境界となる
-
-
 export default function Providers({ children }: { children: React.ReactNode }) {
     // クライアント側getQueryClientは同じインスタンスを使い回すため
     // HydrationBoundary が復元したデータがそのまま残ります。
