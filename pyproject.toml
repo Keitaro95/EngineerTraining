@@ -22,3 +22,8 @@ dependencies = [
     "tavily-python>=0.5.0",
     "torch==2.2.2",
 ]
+
+[tool.uv.workspace]
+members = [
+    "presidio",
+]

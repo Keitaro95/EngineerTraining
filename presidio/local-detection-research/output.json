@@ -1,0 +1,280 @@
+{
+  "masked": {
+    "jobName": "sales-meeting-<DATE>",
+    "accountId": "<MY_NUMBER>",
+    "status": "COMPLETED",
+    "results": {
+      "transcripts": [
+        {
+          "transcript": "お疲れ様です、それでは今週の1on1始めましょうか。まず今月の成績から振り返りたいんだけど、法人新規の進捗どうなってる。はい、お疲れ様です。今月は現時点で契約3件、見込みが5件という状況です。目標に対しては75パーセントくらいですね。なるほど、先月よりは伸びてるね。ちなみに昨日訪問した<ORGANIZATION>さんどうだった。あ、担当の<NAME>様とお会いしてきました。かなり前向きに検討いただいてまして、総務部長も同席されてたんですが、従業員向けの団体保険のプランに関心を持っていただけました。いいじゃない。連絡先は控えてきた。はい、<NAME>様の直通が<PHONE>で、会社代表が<PHONE>です。メールアドレスは<ORGANIZATION>でいただいてます。ご自宅は<ADDRESS>。了解。次回の提案までにプラン固めておいて。あと、前に話してた<NAME>様の件はどうなった。あの個人契約の方の。はい、<NAME>様ですね。生年月日が<DATE>、つまり<DATE>生まれの方で、医療保険の見直しをご希望されてます。マイナンバーも本人確認で控えさせていただいて、<MY_NUMBER>です。保険料の引き落とし口座は<ORGANIZATION>の新宿支店、普通預金で口座番号<BANK_ACCOUNT>をご指定いただきました。クレジットカード払いのオプションもご案内したんですが、カード番号<MY_NUMBER>-1111、有効期限が<DATE>の<DATE>ということで、そちらでも登録可能と伺っています。オッケー、情報はきちんと社内システムに入れた。はい、昨日のうちに入力済みです。ただ、ちょっと相談なんですが、<NAME>様、連絡先が自宅の固定電話しかなくて、日中つながりにくいんですよね。メールは<ORGANIZATION>でお持ちなので、今後はメール中心でいこうかと思ってます。それでいいと思う。ご本人の希望に合わせて進めて。で、話戻るけど<ORGANIZATION>さんの件、うちの法人向け総合プランのAコースで提案する方向でいい。はい、Aコースベースで、オプションで業務災害特約を付ける形を考えてます。先方、製造業なので災害リスクは気にされてました。いいね、筋が通ってる。じゃあ提案書は今週中にドラフト作って、<DATE>までに私にレビュー回して。<DATE>の朝イチで一緒に見よう。承知しました。あともう1件ご報告があって、先週お電話いただいた<NAME>様、見込み客リストに追加してあります。ご住所は<ADDRESS>、連絡先は<LOCATION>です。60代のご夫婦で、相続を意識した生命保険の相談ということで、これは来週アポ取ってます。いい流れだね。その層はLTV高いから丁寧にね。承知しました。ちなみに<NAME>様、前職が銀行員だそうで、商品の中身をかなり細かく聞いてこられると思うので、資料は普段より厚めに準備していきます。それは賢明な判断だね。あと決裁者の奥様もご同席いただけるか事前に確認しておいて。奥様のお名前が<NAME>様で、メールは<ORGANIZATION>とのことでした。こちらからも一度ご挨拶のメール入れておきましょうか。うん、入れておいて。夫婦で同時に意思決定されるケースだから、どちらにも情報が行き渡るようにしたほうがいい。承知しました。最後に、先月クロージングした<NAME>様の案件なんですが、初回保険料の引き落としが<DATE>からスタートしますので、念のため共有しておきます。<NAME>様、口座は<ORGANIZATION>の渋谷支店、口座番号は<BANK_ACCOUNT>です。了解。アフターフォローのお電話も忘れずに。はい、初回引き落とし後に1本お電話入れる予定です。その際、証券の発送状況もあわせてご案内します。いいね、その細やかさが継続契約につながるから。他に共有事項は。いえ、今日はこのくらいです。了解、じゃあ今週もよろしく。お疲れ様、引き続き頑張って。ありがとうございます、失礼します。"
+        }
+      ]
+    }
+  },
+  "detections": [
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "20260420-001",
+      "path": "jobName"
+    },
+    {
+      "entity": "JP_MY_NUMBER",
+      "score": 0.6,
+      "text": "123456789012",
+      "path": "accountId"
+    },
+    {
+      "entity": "JP_KAMPO_POLICY",
+      "score": 0.4,
+      "text": "123456789012",
+      "path": "accountId"
+    },
+    {
+      "entity": "PHONE_NUMBER",
+      "score": 1.0,
+      "text": "090-1234-5678",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PHONE_NUMBER",
+      "score": 1.0,
+      "text": "03-1234-5678",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_ADDRESS",
+      "score": 1.0,
+      "text": "神奈川県横浜市中区山下町5-10-2",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "株式会社グリーンテック",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "田中太郎",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "田中",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "tanaka.taro@greentech-example.co.jp",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "LOCATION",
+      "score": 0.85,
+      "text": "東京都千代田区神田錦町1-2-3",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "山田",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "山田花子",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "昭和50年3月15日",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "1975年3月15日",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "みずほ銀行",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "2028年",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "5月",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "山田",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "yamada.hanako@example.jp",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "グリーンテック",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "木曜",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "金曜",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "鈴木一郎",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "LOCATION",
+      "score": 0.85,
+      "text": "神奈川県横浜市中区山下町5-10-2",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "LOCATION",
+      "score": 0.85,
+      "text": "080-9876-5432",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "鈴木",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "鈴木恵子",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "suzuki.keiko@example.com",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "佐藤",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "DATE_TIME",
+      "score": 0.85,
+      "text": "来月10日",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PERSON",
+      "score": 0.85,
+      "text": "佐藤健太郎",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "ORGANIZATION",
+      "score": 0.85,
+      "text": "三井住友銀行",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "PHONE_NUMBER",
+      "score": 0.75,
+      "text": "080-9876-5432",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_ADDRESS",
+      "score": 0.7,
+      "text": "東京都千代田区神田錦町1-2-3のグランドメゾン502号室とのことでした",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_DATE",
+      "score": 0.7,
+      "text": "昭和50年3月15日",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_BANK_ACCOUNT",
+      "score": 0.65,
+      "text": "1234567",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_BANK_ACCOUNT",
+      "score": 0.65,
+      "text": "7654321",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_MY_NUMBER",
+      "score": 0.6,
+      "text": "1234 5678 9012",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "JP_MY_NUMBER",
+      "score": 0.6,
+      "text": "4111-1111-1111",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "URL",
+      "score": 0.5,
+      "text": "greentech-example.co.jp",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "URL",
+      "score": 0.5,
+      "text": "example.jp",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "URL",
+      "score": 0.5,
+      "text": "suzuki.ke",
+      "path": "results.transcripts[0].transcript"
+    },
+    {
+      "entity": "URL",
+      "score": 0.5,
+      "text": "example.com",
+      "path": "results.transcripts[0].transcript"
+    }
+  ]
+}

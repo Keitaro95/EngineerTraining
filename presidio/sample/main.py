@@ -65,7 +65,11 @@ from presidio_anonymizer import AnonymizerEngine
 # 匿名化エンジンをインスタンスに
 anonymizer = AnonymizerEngine()
 # anonymizer.anonymizeで対象textをマスキングする
-anonymized_text = anonymizer.anonymize(text=sample_text, analyzer_results=results) # type: ignore
+anonymized_text = anonymizer.anonymize(
+    text=sample_text,
+    analyzer_results=results,  # type: ignore
+    
+    )
 
 for item in anonymized_text.items:
     print(f"entity: {item.entity_type}, start: {item.start}, end: {item.end}, text: {item.text}, operator: {item.operator}")

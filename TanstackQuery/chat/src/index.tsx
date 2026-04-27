@@ -1,8 +1,25 @@
+import ReactDOM from 'react-dom/client'
+import {
+    QueryClient,
+    QueryClientProvider,
+} from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
+import { Example } from './_components/Example'
+
+const queryClient = new QueryClient()
 
 
-
-function ChatMessage({ question }: { question: string}) {
-
-    // fetch関数をuseQueryで丸めて状態を取得
-    const { erroe, data = [], isFetching } = useQuery(chatQueryOptions(question))
+export default function App() {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <ReactQueryDevtools />
+            <Example />
+        </QueryClientProvider>
+    )
 }
+
+const rootElement = document.getElementById('root')
+if (!rootElement) throw new Error('Missing #root element')
+ReactDOM.createRoot(rootElement).render(<App />)
+

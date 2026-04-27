@@ -76,7 +76,7 @@ class MyEmpNumberRecognizer(PatternRecognizer):
     
     def validate_result(self, pattern_text: str) -> Optional[bool]:
         # match = self.PATTERNS[0].compiled_regex.search(pattern_text)
-        
+
         match = re.search(self.REGEX, pattern_text)
 
         if match is None:
@@ -133,3 +133,45 @@ batch_results = batchAnalyzer.analyze_iterator(
 )
 for index, results in enumerate(batch_results):
     print(f"text: {sample_texts[index]}, score:{results[0].score if len(results) > 0 else 'None'}")
+
+
+# 匿名化する時はこれ使う
+from presidio_anonymizer import AnonymizerEngine
+from presidio_anonymizer.entities import OperatorConfig
+
+# 匿名化エンジンをインスタンスに
+anonymizer = AnonymizerEngine()
+# anonymizer.anonymizeで対象textをマスキングする
+anonymized_text = anonymizer.anonymize(
+    text=sample_text,
+    analyzer_results=results, # type: ignore
+    operators={
+        # エンティティ名（デフォルトはDEFAULT,）, operator名:replace, paramsで変化を定義
+        # new_value：置換後の文字列
+        "DEFAULT": OperatorConfig(operator_name="replace", params={"new_value": "*"}),
+        "PHONE_NUMBER": OperatorConfig(operator_name="mask", params={"masking_char": "*", "chars_to_mask": 8, "from_end": False}),
+        "CREDIT_CARD": OperatorConfig(operator_name="mask", params={"masking_char": "*", "chars_to_mask": 14, "from_end": True})
+    })
+
+def replacer(entity: str):
+    katakana = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン"
+    return ''.join(random.choices(katakana, k=len(entity)))
+
+
+
+for item in anonymized_text.items:
+    print(f"entity: {item.entity_type}, start: {item.start}, end: {item.end}, text: {item.text}, operator: {item.operator}")
+print(f"匿名化結果: {anonymized_text}")
+
+
+
+anonymized_text = anonymizer.anonymize(
+    text=sample_text,
+    analyzer_results=results, # type: ignore
+    operators={
+        "PERSON": OperatorConfig(operator_name="custom", params={"lambda": replacer}),
+    })
+
+print(anonymized_text.text)
+
+
