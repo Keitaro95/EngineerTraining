@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 export function Example() {
     const [ questions, setQuestions ] = useState<Array<string>>([])
-    const [ currentQuestions, setCurrentQuestion ] = useState('')
+    const [ currentQuestionå, setCurrentQuestion ] = useState('')
 
     const submitMessage = () => {
         setQuestions([...questions, currentQuestion])
@@ -32,7 +32,8 @@ export function Example() {
                     placeholder='メッセージを打ってね'
                 />
                 <button
-                    >
+                    onClick={submitMessage}
+                    disabled={!currentQuestion.trim()}>
 
                 
                 </button>
