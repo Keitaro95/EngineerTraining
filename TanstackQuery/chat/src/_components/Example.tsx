@@ -13,7 +13,7 @@ export function Example() {
         <div className="flex flex-col h-screen max-w-3xl mx-auto p-4">
 
             <h1>
-
+                TanStack Chat Example
             </h1>
 
             <div>
@@ -22,7 +22,20 @@ export function Example() {
 
             <div>
                 <input 
-                    value={currentQuestion} />
+                    value={currentQuestion} 
+                    onChange={(e) => setCurrentQuestion(e.target.value)}
+                    onKeyDown{(e) => {
+                        if (e.key === 'Enter') {
+                            submitMessage()
+                        }
+                    }}
+                    placeholder='メッセージを打ってね'
+                />
+                <button
+                    >
+
+                
+                </button>
 
             </div>
 
