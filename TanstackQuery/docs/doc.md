@@ -1,3 +1,8 @@
+@tailwindcss/vite は .mjs (ESM専用) で配布されています
+デフォルトでは Vite が CJS モードで起動し、require() で設定ファイルを読み込もうとします
+CJS の require() は ESM の .mjs ファイルを読み込めないため、エラーが発生しています
+
+
 
 githubサンプルから読み下しましょう
 https://tanstack.com/query/latest/docs/framework/react/examples/nextjs

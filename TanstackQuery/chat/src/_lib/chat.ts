@@ -12,12 +12,16 @@ const answers = [
 function chatAnswer(_question: string) {
   return {
     async *[Symbol.asyncIterator]() {
+      
       const answer = answers[Math.floor(Math.random() * answers.length)]
       let index = 0
+      // 各単語を100〜400msのランダムな遅延をつけて1単語ずつ yield する
       while (index < answer.length) {
+        // setTimeout単体はawaitできない。Promiseで包むとawaitできる
         await new Promise((resolve) =>
           setTimeout(resolve, 100 + Math.random() * 300),
         )
+        // index++ は「今の値を使ってから、その後で1増やす」という後置インクリメント。
         yield answer[index++]
       }
     },
@@ -27,6 +31,8 @@ function chatAnswer(_question: string) {
 export const chatQueryOptions = (question: string) => queryOptions({
     queryKey: ['chat', question],
     queryFn: streamedQuery({
+      // streamedQuery はその yield のたびに
+      //  TanStack Query のキャッシュを配列として更新 する
         streamFn: () => chatAnswer(question),
     }),
     staleTime: Infinity,
