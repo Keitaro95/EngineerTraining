@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash(uv sync *)",
+      "Bash(python text_normalizer.py)"
     ]
   }
 }

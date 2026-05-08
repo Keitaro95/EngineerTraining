@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -m scacy download ja_core_news_trf
+RUN python -m spacy download ja_core_news_trf
 
 COPY . .
 

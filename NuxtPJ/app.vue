@@ -1,7 +1,7 @@
 <template>
     <!-- layouts/ -->
   <NuxtLayout>
-    <!-- pages -->
+    <!-- pages/index.vue -->
     <NuxtPage />
   </NuxtLayout>
 </template>

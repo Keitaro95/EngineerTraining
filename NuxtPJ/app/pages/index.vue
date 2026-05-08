@@ -1,5 +1,5 @@
 <script setup="ts">
-    import { TopTemplate } from '~/components/templates'
+    import {  } from ''
 </script>
 
 <template>

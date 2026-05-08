@@ -1,17 +1,13 @@
 import os
 import random
+import unicodedata
 import boto3
 from presidio_analyzer import AnalyzerEngine, BatchAnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 
-from recognizers.japanese_custom import (
-    MyEmpNumberRecognizer,
-    MyNumberRecognizer,
-    BankAccountRecognizer,
-    PolicyRecognizer,
-)
+from recognizers.japanese_standard import get_all_japanese_recognizers
 
 # --- 初期化（Lambda コールドスタート時に1度だけ実行） ---
 
@@ -22,19 +18,16 @@ _nlp_config = {
 nlp_engine = NlpEngineProvider(nlp_configuration=_nlp_config).create_engine()
 
 analyzer = AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["ja"])
-for recognizer in (
-    MyEmpNumberRecognizer(),
-    MyNumberRecognizer(),
-    BankAccountRecognizer(),
-    PolicyRecognizer(),
-):
+
+# 日本語標準PII Recognizerを登録（code-document.md準拠）
+for recognizer in get_all_japanese_recognizers():
     analyzer.registry.add_recognizer(recognizer)
 
 batch_analyzer = BatchAnalyzerEngine(analyzer_engine=analyzer)
 anonymizer = AnonymizerEngine()
 
 s3 = boto3.client("s3")
-OUTPUT_BUCKET = os.environ["OUTPUT_BUCKET"]
+OUTPUT_BUCKET = os.environ.get("OUTPUT_BUCKET", "default-bucket")
 
 # PERSON エンティティをカタカナにランダム置換
 _KATAKANA = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン"
@@ -52,10 +45,17 @@ _OPERATORS = {
 
 
 def mask_text(text: str) -> str:
-    results = analyzer.analyze(text=text, language="ja")
+    """
+    テキストをマスキングする。
+    NFKC正規化で全角数字・記号を半角化してから解析（code-document.md準拠）。
+    """
+    # 全角→半角の正規化（必須前処理）
+    text_normalized = unicodedata.normalize("NFKC", text)
+
+    results = analyzer.analyze(text=text_normalized, language="ja")
     if not results:
-        return text
-    return anonymizer.anonymize(text=text, analyzer_results=results, operators=_OPERATORS).text
+        return text_normalized
+    return anonymizer.anonymize(text=text_normalized, analyzer_results=results, operators=_OPERATORS).text
 
 
 # --- Lambda ハンドラ ---
@@ -64,11 +64,13 @@ def lambda_handler(event, context):
     # ローカルテスト用（S3 なしで直接テキストを渡せる）
     if "test_text" in event:
         raw = event["test_text"]
-        results = analyzer.analyze(text=raw, language="ja")
+        # NFKC正規化を適用
+        text_normalized = unicodedata.normalize("NFKC", raw)
+        results = analyzer.analyze(text=text_normalized, language="ja")
         return {
             "masked": mask_text(raw),
             "detections": [
-                {"entity": r.entity_type, "score": round(r.score, 3), "text": raw[r.start:r.end]}
+                {"entity": r.entity_type, "score": round(r.score, 3), "text": text_normalized[r.start:r.end]}
                 for r in results
             ],
         }
@@ -82,7 +84,9 @@ def lambda_handler(event, context):
         src_key    = record["s3"]["object"]["key"]
         obj  = s3.get_object(Bucket=src_bucket, Key=src_key)
         text = obj["Body"].read().decode("utf-8")
-        keys_and_texts.append((src_key, text))
+        # NFKC正規化を適用
+        text_normalized = unicodedata.normalize("NFKC", text)
+        keys_and_texts.append((src_key, text_normalized))
 
     texts = [t for _, t in keys_and_texts]
     batch_results = batch_analyzer.analyze_iterator(texts=texts, language="ja")
