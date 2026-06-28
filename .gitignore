@@ -47,3 +47,11 @@ next-env.d.ts
 !.yarn/sdks
 !.yarn/versions
 .env
+
+# Rust / Cargo
+# Cargo のビルド成果物ディレクトリ
+target/
+# rustc が直接生成する実行ファイル・デバッグ情報
+RustExample/HelloWorld/hello
+RustExample/HelloWorld/Debug/
+*.pdb
