@@ -1,0 +1,1 @@
+// TypeScript では Symbol.iterator プロトコルとして言語に組み込まれており、for...of やスプレッド構文で自然に使えます。
